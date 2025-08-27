@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Clock, KeyRound, Search, CheckCircle, Zap } from "lucide-react";
+import logoUrl from "@/assets/logo.png";
 
 export default function Landing() {
   return (
@@ -11,7 +12,12 @@ export default function Landing() {
         <div className="relative max-w-7xl mx-auto px-4 py-24 text-center">
           <div className="mb-8">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full mb-6">
-              <Search className="w-12 h-12" />
+              <img 
+                src={logoUrl} 
+                alt="VeriScan AI Logo" 
+                className="w-16 h-16 object-contain"
+                data-testid="img-hero-logo"
+              />
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-4">VeriScan AI</h1>
             <p className="text-xl md:text-2xl opacity-90 mb-8">
