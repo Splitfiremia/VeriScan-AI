@@ -14,7 +14,7 @@ interface SearchFiltersProps {
 
 export default function SearchFilters({ showSuggestions, onApplyFilters }: SearchFiltersProps) {
   const [filters, setFilters] = useState({
-    ageRange: "",
+    ageRange: "any",
     location: "",
     associatedWith: "",
     hasPhone: false,
@@ -44,7 +44,7 @@ export default function SearchFilters({ showSuggestions, onApplyFilters }: Searc
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
+                <SelectItem value="any">Any</SelectItem>
                 <SelectItem value="18-25">18-25</SelectItem>
                 <SelectItem value="26-35">26-35</SelectItem>
                 <SelectItem value="36-45">36-45</SelectItem>
