@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Number Formatter - People Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .left-panel {
+            flex: 1;
+            background: #4f46e5;
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .app-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .welcome-text {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .feature-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        .feature-text {
+            font-size: 16px;
+        }
+        .right-panel {
+            flex: 1;
+            background: white;
+            padding: 40px;
+        }
+        .panel-title {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        .search-mode {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        .mode-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .mode-icon {
+            color: #4f46e5;
+            margin-right: 10px;
+        }
+        .mode-heading {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .mode-description {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+        }
+        .tab.active {
+            color: #4f46e5;
+            border-bottom: 3px solid #4f46e5;
+        }
+        .input-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .input-with-prefix {
+            display: flex;
+        }
+        .prefix {
+            padding: 12px 15px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            font-weight: 500;
+        }
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 0 8px 8px 0;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        .format-info {
+            background: #ecfdf5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .info-icon {
+            margin-right: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        button:hover {
+            background: #4338ca;
+        }
+        .button-icon {
+            margin-right: 10px;
+        }
+        .api-info {
+            margin-top: 30px;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+        }
+        .api-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+        .api-description {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .formatted-output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px dashed #e2e8f0;
+        }
+        .output-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+        .output-value {
+            font-family: monospace;
+            color: #4f46e5;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1 class="app-title">Find Anyone, Verify Everything</h1>
+            <p class="welcome-text">Welcome back, Luis! Advanced AI-powered people search and verification platform</p>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="feature-text">Access to billions of public records</div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="feature-text">Real-time data verification</div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="feature-text">Secure and confidential searches</div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <h2 class="panel-title">Professional Search Mode</h2>
+            
+            <div class="search-mode">
+                <div class="mode-title">
+                    <div class="mode-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="mode-heading">Enhanced results using premium data sources</div>
+                </div>
+                <p class="mode-description">Your phone lookups will be formatted automatically for API compatibility</p>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab">Name Search</div>
+                <div class="tab active">Phone Search</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="phoneNumber">Phone Number</label>
+                <div class="input-with-prefix">
+                    <div class="prefix">+1</div>
+                    <input type="tel" id="phoneNumber" placeholder="(212) 555-0123">
+                </div>
+                
+                <div class="format-info">
+                    <div class="info-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div>Numbers are automatically formatted with country code for API lookup</div>
+                </div>
+            </div>
+            
+            <button id="searchBtn">
+                <div class="button-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                Search Now
+            </button>
+            
+            <div class="formatted-output">
+                <div class="output-title">API will receive:</div>
+                <div class="output-value" id="formattedNumber">+1 (XXX) XXX-XXXX</div>
+            </div>
+            
+            <div class="api-info">
+                <div class="api-title">NumVerify API Integration</div>
+                <p class="api-description">Your API key is programmed to expect phone numbers in E.164 format: [+] [country code] [subscriber number]. For example, a US number would be formatted as <code>+12125550123</code> without any spaces, parentheses, or dashes.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('phoneNumber');
+            const formattedOutput = document.getElementById('formattedNumber');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            // Format phone number as user types
+            phoneInput.addEventListener('input', function() {
+                formatPhoneNumber();
+            });
+            
+            // Handle search button click
+            searchBtn.addEventListener('click', function() {
+                const formatted = formatPhoneNumberForAPI();
+                alert(`Searching for phone number: ${formatted}\n\nThis would call the NumVerify API with the properly formatted number.`);
+            });
+            
+            function formatPhoneNumber() {
+                // Remove all non-digit characters
+                let numbers = phoneInput.value.replace(/\D/g, '');
+                let formatted = '';
+                
+                // Format based on length
+                if (numbers.length > 0) {
+                    formatted = '(' + numbers.substring(0, 3);
+                }
+                if (numbers.length > 3) {
+                    formatted += ') ' + numbers.substring(3, 6);
+                }
+                if (numbers.length > 6) {
+                    formatted += '-' + numbers.substring(6, 10);
+                }
+                
+                // Update input value
+                phoneInput.value = formatted;
+                
+                // Update formatted output display
+                if (numbers.length >= 10) {
+                    formattedOutput.textContent = '+1' + numbers;
+                } else {
+                    formattedOutput.textContent = '+1 (XXX) XXX-XXXX';
+                }
+            }
+            
+            function formatPhoneNumberForAPI() {
+                // Remove all non-digit characters and add US country code
+                let numbers = phoneInput.value.replace(/\D/g, '');
+                if (numbers.length === 10) {
+                    return '+1' + numbers;
+                }
+                return '+1XXXXXXXXXX'; // Default if not complete
+            }
+            
+            // Initialize with example
+            phoneInput.value = '(212) 555-0123';
+            formatPhoneNumber();
+        });
+    </script>
+</body>
+</html>

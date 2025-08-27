@@ -84,6 +84,8 @@ export default function SearchTabs() {
     phoneNumber: "",
   });
   
+  const [formattedPhoneDisplay, setFormattedPhoneDisplay] = useState("");
+  
   const [addressSearch, setAddressSearch] = useState({
     address: "",
     city: "",
@@ -157,6 +159,50 @@ export default function SearchTabs() {
     });
   };
 
+  // Phone number formatting functions
+  const formatPhoneForDisplay = (value: string) => {
+    // Remove all non-digit characters
+    const numbers = value.replace(/\D/g, '');
+    let formatted = '';
+    
+    // Format based on length
+    if (numbers.length > 0) {
+      formatted = '(' + numbers.substring(0, 3);
+    }
+    if (numbers.length > 3) {
+      formatted += ') ' + numbers.substring(3, 6);
+    }
+    if (numbers.length > 6) {
+      formatted += '-' + numbers.substring(6, 10);
+    }
+    
+    return formatted;
+  };
+  
+  const formatPhoneForAPI = (value: string) => {
+    // Remove all non-digit characters and add US country code
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length >= 10) {
+      return '+1' + numbers.substring(0, 10);
+    }
+    return '';
+  };
+  
+  const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const numbers = value.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    if (numbers.length <= 10) {
+      const formattedDisplay = formatPhoneForDisplay(value);
+      setPhoneSearch(prev => ({ ...prev, phoneNumber: formattedDisplay }));
+      
+      // Update the API format display
+      const apiFormat = formatPhoneForAPI(value);
+      setFormattedPhoneDisplay(apiFormat || '+1XXXXXXXXXX');
+    }
+  };
+
   const handlePhoneSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!phoneSearch.phoneNumber.trim()) {
@@ -167,10 +213,21 @@ export default function SearchTabs() {
       });
       return;
     }
+    
+    // Format phone number for API
+    const formattedPhone = formatPhoneForAPI(phoneSearch.phoneNumber);
+    if (!formattedPhone) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a complete 10-digit phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     searchMutation.mutate({
       searchType: 'phone',
-      searchQuery: phoneSearch,
+      searchQuery: { phoneNumber: formattedPhone },
     });
   };
 
@@ -348,17 +405,43 @@ export default function SearchTabs() {
           <TabsContent value="phone">
             <form onSubmit={handlePhoneSearch} className="space-y-4">
               <div className="flex justify-center">
-                <div className="w-full max-w-md">
-                  <Label htmlFor="phoneNumber" className="text-white mb-2 block">Phone Number</Label>
-                  <Input
-                    id="phoneNumber"
-                    type="tel"
-                    placeholder="Enter phone number (e.g., 555-123-4567)"
-                    value={phoneSearch.phoneNumber}
-                    onChange={(e) => setPhoneSearch(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                    className="bg-white border-0 text-foreground placeholder-muted-foreground"
-                    data-testid="input-phone-number"
-                  />
+                <div className="w-full max-w-md space-y-4">
+                  <div>
+                    <Label htmlFor="phoneNumber" className="text-white mb-2 block">Phone Number</Label>
+                    <div className="flex">
+                      <div className="px-3 py-2 bg-white/20 border border-white/30 border-r-0 rounded-l-md text-white font-medium">
+                        +1
+                      </div>
+                      <Input
+                        id="phoneNumber"
+                        type="tel"
+                        placeholder="(212) 555-0123"
+                        value={phoneSearch.phoneNumber}
+                        onChange={handlePhoneInputChange}
+                        className="bg-white border-0 text-foreground placeholder-muted-foreground rounded-l-none"
+                        data-testid="input-phone-number"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Visual Feedback */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-green-700 text-sm font-medium">Auto-formatted for API</span>
+                    </div>
+                    <div className="text-green-600 text-sm mt-1">
+                      Numbers are automatically formatted with country code for API lookup
+                    </div>
+                  </div>
+                  
+                  {/* API Format Display */}
+                  <div className="bg-white/10 border border-white/20 rounded-lg p-3">
+                    <div className="text-white/70 text-sm mb-1">API will receive:</div>
+                    <div className="text-white font-mono text-lg" data-testid="formatted-phone-display">
+                      {formattedPhoneDisplay || '+1XXXXXXXXXX'}
+                    </div>
+                  </div>
                 </div>
               </div>
               <Button 
