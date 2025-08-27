@@ -90,6 +90,7 @@ export default function SearchTabs() {
     address: "",
     city: "",
     state: "ALL",
+    zipCode: "",
   });
   
   const [emailSearch, setEmailSearch] = useState({
@@ -459,51 +460,80 @@ export default function SearchTabs() {
 
           <TabsContent value="address">
             <form onSubmit={handleAddressSearch} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="address" className="text-white mb-2 block">Street Address</Label>
+                  <Label htmlFor="address" className="text-white mb-2 block">
+                    Street Address *
+                  </Label>
                   <Input
                     id="address"
-                    placeholder="Street Address"
+                    placeholder="e.g., 123 Main Street"
                     value={addressSearch.address}
                     onChange={(e) => setAddressSearch(prev => ({ ...prev, address: e.target.value }))}
                     className="bg-white border-0 text-foreground placeholder-muted-foreground"
+                    required
                     data-testid="input-street-address"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="addressCity" className="text-white mb-2 block">City</Label>
-                  <Input
-                    id="addressCity"
-                    placeholder="City"
-                    value={addressSearch.city}
-                    onChange={(e) => setAddressSearch(prev => ({ ...prev, city: e.target.value }))}
-                    className="bg-white border-0 text-foreground placeholder-muted-foreground"
-                    data-testid="input-address-city"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="addressState" className="text-white mb-2 block">State</Label>
-                  <Select 
-                    value={addressSearch.state} 
-                    onValueChange={(value) => setAddressSearch(prev => ({ ...prev, state: value }))}
-                  >
-                    <SelectTrigger 
-                      className="bg-white border-0 text-foreground"
-                      data-testid="select-address-state"
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="addressCity" className="text-white mb-2 block">City</Label>
+                    <Input
+                      id="addressCity"
+                      placeholder="City"
+                      value={addressSearch.city}
+                      onChange={(e) => setAddressSearch(prev => ({ ...prev, city: e.target.value }))}
+                      className="bg-white border-0 text-foreground placeholder-muted-foreground"
+                      data-testid="input-address-city"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="addressState" className="text-white mb-2 block">State</Label>
+                    <Select 
+                      value={addressSearch.state} 
+                      onValueChange={(value) => setAddressSearch(prev => ({ ...prev, state: value }))}
                     >
-                      <SelectValue placeholder="State" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {US_STATES.slice(1).map((state) => (
-                        <SelectItem key={state.value} value={state.value}>
-                          {state.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectTrigger 
+                        className="bg-white border-0 text-foreground"
+                        data-testid="select-address-state"
+                      >
+                        <SelectValue placeholder="State" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.slice(1).map((state) => (
+                          <SelectItem key={state.value} value={state.value}>
+                            {state.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="zipCode" className="text-white mb-2 block">ZIP Code</Label>
+                    <Input
+                      id="zipCode"
+                      placeholder="12345 or 12345-6789"
+                      value={addressSearch.zipCode}
+                      onChange={(e) => setAddressSearch(prev => ({ ...prev, zipCode: e.target.value }))}
+                      className="bg-white border-0 text-foreground placeholder-muted-foreground"
+                      data-testid="input-zip-code"
+                    />
+                  </div>
+                </div>
+
+                {/* Smarty Streets API Info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <span className="text-blue-700 text-sm font-medium">Smarty Streets API Integration</span>
+                  </div>
+                  <div className="text-blue-600 text-sm mt-1">
+                    Address will be validated and standardized for accurate property data lookup
+                  </div>
                 </div>
               </div>
+              
               <Button 
                 type="submit" 
                 size="lg"

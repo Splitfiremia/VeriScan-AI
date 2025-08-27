@@ -41,6 +41,7 @@ export interface IStorage {
     lastName?: string;
     city?: string;
     state?: string;
+    zipCode?: string;
     phoneNumber?: string;
     address?: string;
     email?: string;
@@ -144,6 +145,7 @@ export class DatabaseStorage implements IStorage {
     lastName?: string;
     city?: string;
     state?: string;
+    zipCode?: string;
     phoneNumber?: string;
     address?: string;
     email?: string;
@@ -166,6 +168,10 @@ export class DatabaseStorage implements IStorage {
     
     if (query.state) {
       conditions.push(eq(peopleProfiles.state, query.state));
+    }
+    
+    if (query.zipCode) {
+      conditions.push(eq(peopleProfiles.zipCode, query.zipCode));
     }
     
     if (query.phoneNumber) {

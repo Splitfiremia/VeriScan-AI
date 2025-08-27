@@ -151,46 +151,197 @@ export class APIComplianceChecker {
 
   /**
    * Validates address for Smarty Streets API
-   * Street address is required for address searches
+   * Enhanced validation with proper formatting and ZIP code support
    */
-  static validateAddress(addressData: { address: string; city?: string; state?: string }): ValidationResult {
+  static validateAddress(addressData: { address: string; city?: string; state?: string; zipCode?: string }): ValidationResult {
     const result: ValidationResult = {
       isValid: false,
       errors: [],
       warnings: []
     };
 
+    // Validate required street address
     if (!addressData.address || addressData.address.trim() === '') {
       result.errors.push('Street address is required');
       return result;
     }
 
-    if (addressData.address.length < 5) {
-      result.errors.push('Address seems too short');
+    const address = addressData.address.trim();
+
+    // Check minimum length
+    if (address.length < 5) {
+      result.errors.push('Street address must contain at least street number and name');
       return result;
     }
 
-    // Check for PO Box (some APIs don't support them)
-    if (/P\.?O\.?\s*BOX/i.test(addressData.address)) {
-      result.warnings.push('PO Box addresses may have limited data availability');
+    // Validate street number exists
+    if (!/^\d/.test(address)) {
+      result.errors.push('Address must start with a street number (e.g., "123 Main St")');
+      return result;
     }
 
-    // Validate state format if provided
-    if (addressData.state && addressData.state.length !== 2) {
-      result.warnings.push('State should be 2-letter code for best results');
+    // Check for PO Box (Smarty API handles but may have limited data)
+    if (/P\.?O\.?\s*BOX/i.test(address)) {
+      result.warnings.push('PO Box addresses may have limited residential data availability');
     }
 
-    const formattedData = {
-      address: addressData.address.trim(),
-      city: addressData.city?.trim() || '',
-      state: addressData.state?.trim().toUpperCase() || ''
+    // Validate and format street abbreviations
+    const formattedAddress = this.formatStreetAddress(address);
+
+    // Validate state if provided
+    let formattedState = '';
+    if (addressData.state) {
+      const state = addressData.state.trim().toUpperCase();
+      if (state.length !== 2) {
+        result.errors.push('State must be a valid 2-letter code (e.g., NY, CA, TX)');
+        return result;
+      }
+      if (!this.isValidUSState(state)) {
+        result.errors.push(`Invalid state code: ${state}`);
+        return result;
+      }
+      formattedState = state;
+    }
+
+    // Validate city if provided
+    let formattedCity = '';
+    if (addressData.city) {
+      const city = addressData.city.trim();
+      if (city.length < 2) {
+        result.warnings.push('City name seems too short');
+      } else if (!/^[a-zA-Z\s\-'.]+$/.test(city)) {
+        result.errors.push('City name contains invalid characters');
+        return result;
+      }
+      formattedCity = this.formatCityName(city);
+    }
+
+    // Validate ZIP code if provided
+    let formattedZip = '';
+    if (addressData.zipCode) {
+      const zipValidation = this.validateZipCode(addressData.zipCode);
+      if (!zipValidation.isValid) {
+        result.errors.push(...zipValidation.errors);
+        return result;
+      }
+      formattedZip = zipValidation.formattedValue || '';
+    }
+
+    // Create Smarty Streets API compatible format
+    const smartyData = {
+      street: formattedAddress,
+      city: formattedCity,
+      state: formattedState,
+      zipcode: formattedZip
     };
 
+    // Remove empty fields for cleaner API request
+    Object.keys(smartyData).forEach(key => {
+      if (!smartyData[key as keyof typeof smartyData]) {
+        delete smartyData[key as keyof typeof smartyData];
+      }
+    });
+
+    // Add helpful warnings
+    if (!formattedCity && !formattedZip) {
+      result.warnings.push('Adding city or ZIP code will improve address validation accuracy');
+    }
+    if (!formattedState) {
+      result.warnings.push('Adding state will improve address validation accuracy');
+    }
+
     result.isValid = true;
-    result.formattedValue = JSON.stringify(formattedData);
-    result.apiFormat = JSON.stringify(formattedData);
+    result.formattedValue = JSON.stringify(smartyData);
+    result.apiFormat = JSON.stringify(smartyData);
 
     return result;
+  }
+
+  /**
+   * Format street address with proper abbreviations
+   */
+  private static formatStreetAddress(address: string): string {
+    const streetAbbreviations = {
+      'street': 'St',
+      'avenue': 'Ave',
+      'boulevard': 'Blvd',
+      'drive': 'Dr',
+      'lane': 'Ln',
+      'road': 'Rd',
+      'circle': 'Cir',
+      'court': 'Ct',
+      'place': 'Pl',
+      'square': 'Sq',
+      'terrace': 'Ter',
+      'parkway': 'Pkwy',
+      'highway': 'Hwy',
+      'expressway': 'Expy'
+    };
+
+    let formatted = address;
+    
+    // Apply standard abbreviations
+    Object.entries(streetAbbreviations).forEach(([full, abbrev]) => {
+      const regex = new RegExp(`\\b${full}\\b`, 'gi');
+      formatted = formatted.replace(regex, abbrev);
+    });
+
+    return formatted;
+  }
+
+  /**
+   * Format city name with proper capitalization
+   */
+  private static formatCityName(city: string): string {
+    return city.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  /**
+   * Validate ZIP code format (5-digit or 5+4 format)
+   */
+  private static validateZipCode(zipCode: string): ValidationResult {
+    const result: ValidationResult = {
+      isValid: false,
+      errors: [],
+      warnings: []
+    };
+
+    const zip = zipCode.trim().replace(/\s+/g, '');
+    
+    // Check for valid ZIP code patterns
+    const zip5Pattern = /^\d{5}$/;
+    const zip9Pattern = /^\d{5}-\d{4}$/;
+    const zip9AltPattern = /^\d{9}$/;
+
+    if (zip5Pattern.test(zip)) {
+      result.isValid = true;
+      result.formattedValue = zip;
+    } else if (zip9Pattern.test(zip)) {
+      result.isValid = true;
+      result.formattedValue = zip;
+    } else if (zip9AltPattern.test(zip)) {
+      result.isValid = true;
+      result.formattedValue = `${zip.substring(0, 5)}-${zip.substring(5)}`;
+    } else {
+      result.errors.push('ZIP code must be in 5-digit (12345) or 9-digit (12345-6789) format');
+    }
+
+    return result;
+  }
+
+  /**
+   * Check if state code is valid US state
+   */
+  private static isValidUSState(stateCode: string): boolean {
+    const validStates = [
+      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+      'DC' // District of Columbia
+    ];
+    return validStates.includes(stateCode.toUpperCase());
   }
 
   /**

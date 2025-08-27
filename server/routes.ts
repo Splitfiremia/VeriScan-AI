@@ -79,9 +79,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else if (searchType === 'address') {
         results = await storage.searchPeople({
-          address: formattedQuery.address,
+          address: formattedQuery.address || formattedQuery.street,
           city: formattedQuery.city,
           state: formattedQuery.state,
+          zipCode: formattedQuery.zipcode || formattedQuery.zipCode,
         });
       } else if (searchType === 'email') {
         results = await storage.searchPeople({
