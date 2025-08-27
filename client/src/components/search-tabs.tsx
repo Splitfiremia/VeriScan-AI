@@ -184,10 +184,10 @@ export default function SearchTabs() {
     <Card className="bg-white/10 backdrop-blur-sm border-white/20">
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/10">
+          <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/15 border border-white/20">
             <TabsTrigger 
               value="name" 
-              className="data-[state=active]:bg-white data-[state=active]:text-primary"
+              className="text-white font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
               data-testid="tab-name-search"
             >
               <User className="w-4 h-4 mr-2" />
@@ -195,7 +195,7 @@ export default function SearchTabs() {
             </TabsTrigger>
             <TabsTrigger 
               value="phone"
-              className="data-[state=active]:bg-white data-[state=active]:text-primary"
+              className="text-white font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
               data-testid="tab-phone-search"
             >
               <Phone className="w-4 h-4 mr-2" />
@@ -203,7 +203,7 @@ export default function SearchTabs() {
             </TabsTrigger>
             <TabsTrigger 
               value="address"
-              className="data-[state=active]:bg-white data-[state=active]:text-primary"
+              className="text-white font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
               data-testid="tab-address-search"
             >
               <MapPin className="w-4 h-4 mr-2" />
