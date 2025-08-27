@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Input Format Compliance Checker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            background: #4f46e5;
+            color: white;
+            padding: 25px;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            opacity: 0.9;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            height: fit-content;
+        }
+        .card-title {
+            font-size: 20px;
+            color: #1f2937;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+        .card-title i {
+            margin-right: 10px;
+            color: #4f46e5;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #4338ca;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            border-left: 4px solid #dc2626;
+        }
+        .warning {
+            background: #fffbeb;
+            color: #d97706;
+            border-left: 4px solid #f59e0b;
+        }
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .result-content {
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .compliance-list {
+            list-style-type: none;
+        }
+        .compliance-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+        .compliance-list li:last-child {
+            border-bottom: none;
+        }
+        .compliance-list i {
+            margin-right: 10px;
+        }
+        .fa-check-circle {
+            color: #10b981;
+        }
+        .fa-times-circle {
+            color: #dc2626;
+        }
+        .fa-exclamation-circle {
+            color: #f59e0b;
+        }
+        .tab {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .tab-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-item.active {
+            color: #4f46e5;
+            border-bottom: 3px solid #4f46e5;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .api-info {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .api-info-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #374151;
+        }
+        .format-example {
+            font-family: monospace;
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>API Input Format Compliance Checker</h1>
+            <p class="subtitle">Verify your inputs match external API requirements</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-check-circle"></i> Input Validation</h2>
+                
+                <div class="tab">
+                    <div class="tab-item active" data-tab="phone">Phone Validation</div>
+                    <div class="tab-item" data-tab="email">Email Validation</div>
+                    <div class="tab-item" data-tab="name">Name Validation</div>
+                </div>
+                
+                <div class="tab-content active" id="phone-tab">
+                    <div class="input-group">
+                        <label for="phoneInput">Phone Number</label>
+                        <input type="text" id="phoneInput" placeholder="e.g., (212) 555-0123">
+                        <div class="api-info">
+                            <div class="api-info-title">NumVerify API Requirement:</div>
+                            <p>E.164 format with country code: [+] [country code] [subscriber number]</p>
+                            <div class="format-example">Example: +12125550123</div>
+                        </div>
+                    </div>
+                    <button onclick="validatePhone()">Validate Phone Format</button>
+                </div>
+                
+                <div class="tab-content" id="email-tab">
+                    <div class="input-group">
+                        <label for="emailInput">Email Address</label>
+                        <input type="text" id="emailInput" placeholder="e.g., user@example.com">
+                        <div class="api-info">
+                            <div class="api-info-title">Hunter.io API Requirement:</div>
+                            <p>Valid email format with domain</p>
+                            <div class="format-example">Example: john.doe@company.com</div>
+                        </div>
+                    </div>
+                    <button onclick="validateEmail()">Validate Email Format</button>
+                </div>
+                
+                <div class="tab-content" id="name-tab">
+                    <div class="input-group">
+                        <label for="firstName">First Name (Optional)</label>
+                        <input type="text" id="firstName" placeholder="e.g., John">
+                    </div>
+                    <div class="input-group">
+                        <label for="lastName">Last Name (Required)</label>
+                        <input type="text" id="lastName" placeholder="e.g., Smith">
+                    </div>
+                    <div class="input-group">
+                        <label for="city">City (Optional)</label>
+                        <input type="text" id="city" placeholder="e.g., New York">
+                    </div>
+                    <div class="input-group">
+                        <label for="state">State (Optional)</label>
+                        <input type="text" id="state" placeholder="e.g., NY">
+                    </div>
+                    <div class="api-info">
+                        <div class="api-info-title">Smarty & WebScraping.ai API Requirement:</div>
+                        <p>Last name is required. Additional fields improve search accuracy.</p>
+                    </div>
+                    <button onclick="validateName()">Validate Name Format</button>
+                </div>
+                
+                <div id="validationResult" class="result"></div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-list-alt"></i> API Compliance Checklist</h2>
+                <ul class="compliance-list">
+                    <li><i class="fas fa-check-circle"></i> Phone numbers must be in E.164 format</li>
+                    <li><i class="fas fa-check-circle"></i> Email addresses must be valid format</li>
+                    <li><i class="fas fa-check-circle"></i> Name searches require last name</li>
+                    <li><i class="fas fa-check-circle"></i> Authentication required for all endpoints</li>
+                    <li><i class="fas fa-check-circle"></i> JSON content type for POST requests</li>
+                    <li><i class="fas fa-check-circle"></i> Session cookie included with requests</li>
+                </ul>
+                
+                <h2 class="card-title" style="margin-top: 30px;"><i class="fas fa-plug"></i> API Endpoints</h2>
+                <div class="api-info">
+                    <div class="api-info-title">Base URL:</div>
+                    <p>https://b9becc29-c707-42da-a170-b5ad23c611f6-00-r66ztxx850lz.riker.replit.dev</p>
+                    
+                    <div class="api-info-title" style="margin-top: 15px;">Key Endpoints:</div>
+                    <p>POST /api/search - People search</p>
+                    <p>GET /api/search/history - Search history</p>
+                    <p>GET /api/profile/:id - Detailed profile</p>
+                    <p>GET /api/feature-flags - Feature flags</p>
+                </div>
+                
+                <button onclick="runComplianceCheck()" style="margin-top: 20px;">
+                    <i class="fas fa-bolt"></i> Run Full Compliance Check
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabName = tab.getAttribute('data-tab');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+        
+        // Phone validation function
+        function validatePhone() {
+            const phoneInput = document.getElementById('phoneInput').value.trim();
+            const resultDiv = document.getElementById('validationResult');
+            
+            // Remove any non-digit characters
+            const numbers = phoneInput.replace(/\D/g, '');
+            
+            if (numbers.length === 10) {
+                const formatted = '+1' + numbers;
+                resultDiv.innerHTML = `
+                    <div class="result-title">✓ Phone Number Validated Successfully</div>
+                    <div>Original input: ${phoneInput}</div>
+                    <div>API-ready format: <strong>${formatted}</strong></div>
+                    <div class="result-content">// This would be sent to NumVerify API as: ${formatted}</div>
+                `;
+                resultDiv.className = 'result success';
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result-title">✗ Invalid Phone Number</div>
+                    <div>Please enter a 10-digit US phone number</div>
+                    <div>Example: (212) 555-0123 or 2125550123</div>
+                `;
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        // Email validation function
+        function validateEmail() {
+            const emailInput = document.getElementById('emailInput').value.trim();
+            const resultDiv = document.getElementById('validationResult');
+            
+            // Simple email validation regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (emailRegex.test(emailInput)) {
+                resultDiv.innerHTML = `
+                    <div class="result-title">✓ Email Address Validated Successfully</div>
+                    <div>Email: <strong>${emailInput}</strong></div>
+                    <div class="result-content">// This would be sent to Hunter.io API as: ${emailInput}</div>
+                `;
+                resultDiv.className = 'result success';
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result-title">✗ Invalid Email Address</div>
+                    <div>Please enter a valid email address</div>
+                    <div>Example: user@example.com</div>
+                `;
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        // Name validation function
+        function validateName() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const resultDiv = document.getElementById('validationResult');
+            
+            if (!lastName) {
+                resultDiv.innerHTML = `
+                    <div class="result-title">✗ Last Name Required</div>
+                    <div>Name searches require at least a last name</div>
+                `;
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            const queryObject = {
+                firstName: firstName || undefined,
+                lastName: lastName,
+                city: city || undefined,
+                state: state || undefined
+            };
+            
+            // Remove undefined properties
+            Object.keys(queryObject).forEach(key => {
+                if (queryObject[key] === undefined) {
+                    delete queryObject[key];
+                }
+            });
+            
+            resultDiv.innerHTML = `
+                <div class="result-title">✓ Name Search Validated Successfully</div>
+                <div>Your search parameters:</div>
+                <div class="result-content">${JSON.stringify(queryObject, null, 2)}</div>
+                <div class="result-content">// This would be sent to Smarty/WebScraping.ai APIs</div>
+            `;
+            resultDiv.className = 'result success';
+            resultDiv.style.display = 'block';
+        }
+        
+        // Full compliance check
+        function runComplianceCheck() {
+            alert('Running full compliance check...\n\nThis would validate all API inputs against the external API requirements and check authentication status.');
+        }
+        
+        // Initialize with examples
+        document.getElementById('phoneInput').value = '(212) 555-0123';
+        document.getElementById('emailInput').value = 'john.doe@example.com';
+        document.getElementById('firstName').value = 'John';
+        document.getElementById('lastName').value = 'Smith';
+        document.getElementById('city').value = 'New York';
+        document.getElementById('state').value = 'NY';
+    </script>
+</body>
+</html>

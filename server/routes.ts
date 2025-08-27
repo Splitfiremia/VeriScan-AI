@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertSearchHistorySchema } from "@shared/schema";
 import { SearchOrchestrator, validateSearchInput, generateSearchId } from "./api-services";
+import { APIComplianceChecker, generateComplianceReport } from "./api-compliance";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -32,41 +33,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid search type" });
       }
 
-      // Perform search based on type
+      // API Compliance Check - Validate and format input
+      const validation = APIComplianceChecker.validateSearchRequest(searchType, searchQuery);
+      
+      if (!validation.isValid) {
+        console.error("API Compliance Error:", validation.errors);
+        return res.status(400).json({ 
+          message: "Invalid search parameters", 
+          errors: validation.errors,
+          complianceReport: generateComplianceReport(searchType, searchQuery)
+        });
+      }
+
+      // Use formatted/validated data for search
+      let formattedQuery = searchQuery;
+      if (validation.apiFormat) {
+        if (searchType === 'phone') {
+          formattedQuery = { phoneNumber: validation.formattedValue };
+        } else if (searchType === 'email') {
+          formattedQuery = { email: validation.formattedValue };
+        } else {
+          try {
+            formattedQuery = JSON.parse(validation.apiFormat);
+          } catch (e) {
+            formattedQuery = searchQuery;
+          }
+        }
+      }
+
+      console.log(`✓ API Compliance passed for ${searchType} search:`, validation.formattedValue);
+
+      // Perform search based on type using formatted/validated data
       let results: any[] = [];
       
       if (searchType === 'name') {
         results = await storage.searchPeople({
-          firstName: searchQuery.firstName,
-          lastName: searchQuery.lastName,
-          city: searchQuery.city,
-          state: searchQuery.state,
+          firstName: formattedQuery.firstName,
+          lastName: formattedQuery.lastName,
+          city: formattedQuery.city,
+          state: formattedQuery.state,
         });
       } else if (searchType === 'phone') {
         results = await storage.searchPeople({
-          phoneNumber: searchQuery.phoneNumber,
+          phoneNumber: formattedQuery.phoneNumber,
         });
       } else if (searchType === 'address') {
         results = await storage.searchPeople({
-          address: searchQuery.address,
-          city: searchQuery.city,
-          state: searchQuery.state,
+          address: formattedQuery.address,
+          city: formattedQuery.city,
+          state: formattedQuery.state,
         });
       } else if (searchType === 'email') {
         results = await storage.searchPeople({
-          email: searchQuery.email,
+          email: formattedQuery.email,
         });
       }
 
-      // Save search history
+      // Save search history with formatted query
       await storage.createSearchHistory({
         userId,
         searchType,
-        searchQuery,
+        searchQuery: formattedQuery,
         searchResults: results,
       });
 
-      res.json({ results, total: results.length });
+      // Include compliance info in response for debugging
+      const responseData = {
+        results, 
+        total: results.length,
+        compliance: {
+          isValid: validation.isValid,
+          formattedInput: validation.formattedValue,
+          warnings: validation.warnings
+        }
+      };
+
+      res.json(responseData);
     } catch (error) {
       console.error("Error performing search:", error);
       res.status(500).json({ message: "Search failed" });
@@ -154,15 +196,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API Compliance Validation Endpoint
+  app.post('/api/validate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { searchType, searchQuery } = req.body;
+      
+      const validation = APIComplianceChecker.validateSearchRequest(searchType, searchQuery);
+      const complianceReport = generateComplianceReport(searchType, searchQuery);
+      
+      res.json({
+        validation,
+        complianceReport,
+        timestamp: new Date().toISOString(),
+        searchType,
+        originalInput: searchQuery
+      });
+    } catch (error) {
+      console.error("Error validating input:", error);
+      res.status(500).json({ message: "Validation failed" });
+    }
+  });
+
   // Professional API Search Endpoint (Enhanced with External APIs)
   app.post('/api/search/pro', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { searchType, searchQuery } = req.body;
+      
+      // API Compliance Check - Validate before external API calls
+      const validation = APIComplianceChecker.validateSearchRequest(searchType, searchQuery);
+      
+      if (!validation.isValid) {
+        console.error("Professional API Compliance Error:", validation.errors);
+        return res.status(400).json({ 
+          message: "Invalid search parameters for professional search", 
+          errors: validation.errors,
+          complianceReport: generateComplianceReport(searchType, searchQuery)
+        });
+      }
+
+      // Use formatted/validated data for external API calls
+      let formattedQuery = searchQuery;
+      if (validation.apiFormat) {
+        if (searchType === 'phone') {
+          formattedQuery = { phoneNumber: validation.formattedValue };
+        } else if (searchType === 'email') {
+          formattedQuery = { email: validation.formattedValue };
+        } else {
+          try {
+            formattedQuery = JSON.parse(validation.apiFormat);
+          } catch (e) {
+            formattedQuery = searchQuery;
+          }
+        }
+      }
+
+      console.log(`✓ Professional API Compliance passed for ${searchType} search:`, validation.formattedValue);
+      
       const orchestrator = new SearchOrchestrator();
       
-      // Perform enhanced search using external APIs
-      const enhancedResults = await orchestrator.performSearch(searchType, searchQuery);
+      // Perform enhanced search using external APIs with validated/formatted data
+      const enhancedResults = await orchestrator.performSearch(searchType, formattedQuery);
       
       // Also perform local database search for comparison
       let localResults: any[] = [];
@@ -176,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else if (searchType === 'phone') {
         localResults = await storage.searchPeople({
-          phoneNumber: searchQuery.phoneNumber,
+          phoneNumber: formattedQuery.phoneNumber,
         });
       } else if (searchType === 'address') {
         localResults = await storage.searchPeople({
