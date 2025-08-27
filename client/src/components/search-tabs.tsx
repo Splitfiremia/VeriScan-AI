@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { User, Phone, MapPin, Search, Mail } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { User, Phone, MapPin, Search, Mail, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
@@ -93,14 +94,18 @@ export default function SearchTabs() {
     email: "",
   });
 
+  const [useProfessionalSearch, setUseProfessionalSearch] = useState(false);
+
   const searchMutation = useMutation({
     mutationFn: async (searchData: { searchType: string; searchQuery: any }) => {
-      return await apiRequest("POST", "/api/search", searchData);
+      const endpoint = useProfessionalSearch ? "/api/search/pro" : "/api/search";
+      return await apiRequest("POST", endpoint, searchData);
     },
     onSuccess: () => {
       // Navigate to results page with search params
       const searchParams = new URLSearchParams();
       searchParams.set('type', activeTab);
+      searchParams.set('pro', useProfessionalSearch.toString());
       
       if (activeTab === 'name') {
         searchParams.set('q', `${nameSearch.firstName} ${nameSearch.lastName}`.trim());
@@ -204,7 +209,33 @@ export default function SearchTabs() {
   };
 
   return (
-    <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+    <div className="space-y-6">
+      {/* Professional Search Toggle */}
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Zap className="h-5 w-5 text-yellow-400" />
+              <div>
+                <Label htmlFor="professional-search" className="text-white font-medium">
+                  Professional Search Mode
+                </Label>
+                <p className="text-sm text-white/70">
+                  Enhanced results using premium data sources
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="professional-search"
+              checked={useProfessionalSearch}
+              onCheckedChange={setUseProfessionalSearch}
+              data-testid="toggle-professional-search"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-6 bg-white/15 border border-white/20">
@@ -434,5 +465,6 @@ export default function SearchTabs() {
         </Tabs>
       </CardContent>
     </Card>
+    </div>
   );
 }

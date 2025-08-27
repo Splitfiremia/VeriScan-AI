@@ -1,9 +1,9 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 // API SERVICE ARCHITECTURE FOR PEOPLE SEARCH
 
 // 1. API Service Factory Pattern
-class APIServiceFactory {
+export class APIServiceFactory {
   static getService(inputType, query) {
     switch(inputType) {
       case 'email':
@@ -21,7 +21,7 @@ class APIServiceFactory {
 }
 
 // 2. Base API Service Template
-class BaseAPIService {
+export class BaseAPIService {
   constructor() {
     this.apiKey = process.env[this.constructor.API_KEY_NAME];
     this.baseURL = this.constructor.BASE_URL;
@@ -82,7 +82,7 @@ class BaseAPIService {
 }
 
 // 3. Email Lookup Service (Hunter.io)
-class EmailLookupService extends BaseAPIService {
+export class EmailLookupService extends BaseAPIService {
   static SERVICE_NAME = 'Hunter.io Email API';
   static API_KEY_NAME = 'HUNTER_API_KEY';
   static BASE_URL = 'https://api.hunter.io/v2/';
@@ -113,7 +113,7 @@ class EmailLookupService extends BaseAPIService {
 }
 
 // 4. Phone Lookup Service (NumVerify)
-class PhoneLookupService extends BaseAPIService {
+export class PhoneLookupService extends BaseAPIService {
   static SERVICE_NAME = 'NumVerify Phone API';
   static API_KEY_NAME = 'NUMVERIFY_API_KEY';
   static BASE_URL = 'http://apilayer.net/api/';
@@ -143,7 +143,7 @@ class PhoneLookupService extends BaseAPIService {
 }
 
 // 5. Name Lookup Service (Smarty + WebScraping.ai)
-class NameLookupService extends BaseAPIService {
+export class NameLookupService extends BaseAPIService {
   static SERVICE_NAME = 'Name Search API';
   static API_KEY_NAME = 'SMARTY_AUTH_ID';
   static BASE_URL = 'https://us-street.api.smarty.com/';
@@ -233,7 +233,7 @@ class NameLookupService extends BaseAPIService {
 }
 
 // 6. Address Lookup Service (Smarty)
-class AddressLookupService extends BaseAPIService {
+export class AddressLookupService extends BaseAPIService {
   static SERVICE_NAME = 'Smarty Address API';
   static API_KEY_NAME = 'SMARTY_AUTH_ID';
   static BASE_URL = 'https://us-street.api.smarty.com/';
@@ -285,7 +285,7 @@ class AddressLookupService extends BaseAPIService {
 }
 
 // 7. Comprehensive Search Service (Multiple APIs)
-class ComprehensiveSearchService extends BaseAPIService {
+export class ComprehensiveSearchService extends BaseAPIService {
   static SERVICE_NAME = 'Comprehensive People Search';
   
   async search(query) {
@@ -347,7 +347,7 @@ class ComprehensiveSearchService extends BaseAPIService {
 }
 
 // 8. Main Search Orchestrator
-class SearchOrchestrator {
+export class SearchOrchestrator {
   constructor() {
     this.activeServices = new Map();
   }
@@ -418,7 +418,7 @@ class SearchOrchestrator {
 }
 
 // 9. Input Validation Middleware
-function validateSearchInput(req, res, next) {
+export function validateSearchInput(req, res, next) {
   const { searchType, searchQuery } = req.body;
   
   const validators = {
@@ -450,19 +450,8 @@ function validateSearchInput(req, res, next) {
 }
 
 // 10. Utility Functions
-function generateSearchId() {
+export function generateSearchId() {
   return `srch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Export for use in other modules
-module.exports = {
-  APIServiceFactory,
-  SearchOrchestrator,
-  EmailLookupService,
-  PhoneLookupService,
-  NameLookupService,
-  AddressLookupService,
-  ComprehensiveSearchService,
-  validateSearchInput,
-  generateSearchId
-};
+// All exports are handled with ES6 export statements above

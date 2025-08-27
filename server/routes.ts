@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertSearchHistorySchema } from "@shared/schema";
+import { SearchOrchestrator, validateSearchInput, generateSearchId } from "./api-services";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -150,6 +151,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling feature flag:", error);
       res.status(500).json({ message: "Failed to toggle feature flag" });
+    }
+  });
+
+  // Professional API Search Endpoint (Enhanced with External APIs)
+  app.post('/api/search/pro', validateSearchInput, isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { searchType, searchQuery } = req.body;
+      const orchestrator = new SearchOrchestrator();
+      
+      // Perform enhanced search using external APIs
+      const enhancedResults = await orchestrator.performSearch(searchType, searchQuery);
+      
+      // Also perform local database search for comparison
+      let localResults: any[] = [];
+      
+      if (searchType === 'name') {
+        localResults = await storage.searchPeople({
+          firstName: searchQuery.firstName,
+          lastName: searchQuery.lastName,
+          city: searchQuery.city,
+          state: searchQuery.state,
+        });
+      } else if (searchType === 'phone') {
+        localResults = await storage.searchPeople({
+          phoneNumber: searchQuery.phoneNumber,
+        });
+      } else if (searchType === 'address') {
+        localResults = await storage.searchPeople({
+          address: searchQuery.address,
+          city: searchQuery.city,
+          state: searchQuery.state,
+        });
+      } else if (searchType === 'email') {
+        localResults = await storage.searchPeople({
+          email: searchQuery.email,
+        });
+      }
+
+      // Combine results from external APIs and local database
+      const combinedResults = {
+        external: enhancedResults,
+        local: localResults,
+        combined: [...localResults, ...(enhancedResults.results || [])],
+        searchId: generateSearchId(),
+        timestamp: new Date().toISOString()
+      };
+
+      // Save search history
+      await storage.createSearchHistory({
+        userId,
+        searchType: `pro_${searchType}`,
+        searchQuery,
+        searchResults: combinedResults,
+      });
+
+      res.json({
+        success: true,
+        data: combinedResults,
+        searchId: combinedResults.searchId,
+        timestamp: combinedResults.timestamp,
+        sources: ['VeriScan Database', ...(enhancedResults.metadata?.sourcesUsed || [])]
+      });
+      
+    } catch (error) {
+      console.error('Professional search endpoint error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Professional search operation failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
