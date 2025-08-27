@@ -422,19 +422,25 @@ export function validateSearchInput(req, res, next) {
   const { searchType, searchQuery } = req.body;
   
   const validators = {
-    email: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
-    phone: (phone) => /^[\d\s\-\+\(\)]{10,}$/.test(phone.replace(/[^\d]/g, '')),
-    name: (name) => {
-      if (typeof name === 'object') {
-        return name.lastName && name.lastName.trim().length >= 2;
-      }
-      return typeof name === 'string' && name.trim().length >= 2;
+    email: (query) => {
+      const email = query.email || query;
+      return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     },
-    address: (address) => {
-      if (typeof address === 'object') {
-        return address.address && address.address.trim().length >= 5;
+    phone: (query) => {
+      const phone = query.phoneNumber || query.phone || query;
+      return typeof phone === 'string' && /^[\d\s\-\+\(\)]{10,}$/.test(phone.replace(/[^\d]/g, ''));
+    },
+    name: (query) => {
+      if (typeof query === 'object') {
+        return query.lastName && query.lastName.trim().length >= 2;
       }
-      return typeof address === 'string' && address.trim().length >= 5;
+      return typeof query === 'string' && query.trim().length >= 2;
+    },
+    address: (query) => {
+      if (typeof query === 'object') {
+        return query.address && query.address.trim().length >= 5;
+      }
+      return typeof query === 'string' && query.trim().length >= 5;
     }
   };
 

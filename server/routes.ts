@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Professional API Search Endpoint (Enhanced with External APIs)
-  app.post('/api/search/pro', validateSearchInput, isAuthenticated, async (req: any, res) => {
+  app.post('/api/search/pro', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { searchType, searchQuery } = req.body;
