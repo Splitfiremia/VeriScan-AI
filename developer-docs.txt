@@ -1,0 +1,414 @@
+VERISCAN AI - DEVELOPER DOCUMENTATION
+=====================================
+
+VERSION: 1.0.0
+LAST UPDATED: 2025-01-27
+DOMAIN: b9becc29-c707-42da-a170-b5ad23c611f6-00-r66ztxx850lz.riker.replit.dev
+
+TABLE OF CONTENTS
+=================
+1. OVERVIEW
+2. ARCHITECTURE
+3. API SERVICES
+4. AUTHENTICATION SYSTEM
+5. DATABASE SCHEMA
+6. FRONTEND COMPONENTS
+7. FEATURE FLAGS
+8. ENVIRONMENT CONFIGURATION
+9. DEPLOYMENT NOTES
+
+1. OVERVIEW
+===========
+VeriScan AI is a professional people search and verification platform built with:
+- Frontend: React + TypeScript + Vite
+- Backend: Express.js + TypeScript
+- Database: PostgreSQL with Drizzle ORM
+- Authentication: Replit OIDC (OpenID Connect)
+- UI: shadcn/ui components with Tailwind CSS
+
+Key Features:
+- Multi-type search (Name, Phone, Address)
+- User authentication and session management
+- Search history tracking
+- Feature flags system for A/B testing
+- Professional search results with detailed profiles
+- Developer mode for testing and configuration
+
+2. ARCHITECTURE
+===============
+
+Frontend Architecture:
+- Component-based React architecture
+- TypeScript for type safety
+- TanStack Query for server state management
+- Wouter for lightweight routing
+- shadcn/ui for consistent UI components
+- Tailwind CSS for styling
+
+Backend Architecture:
+- RESTful API design with Express.js
+- Middleware-based authentication
+- Database abstraction through storage layer
+- Error handling and request logging
+- Session management with PostgreSQL store
+
+Directory Structure:
+/client/src/          - Frontend React application
+/server/              - Backend Express.js API
+/shared/              - Shared TypeScript types and schemas
+/attached_assets/     - Static assets and uploads
+
+3. API SERVICES
+===============
+
+Base URL: https://[your-domain]
+All API endpoints require authentication except login/logout flows.
+
+AUTHENTICATION ENDPOINTS:
+-------------------------
+GET /api/login
+  Description: Initiates Replit OIDC authentication flow
+  Authentication: None required
+  Response: Redirects to Replit authentication
+
+GET /api/callback
+  Description: Handles OIDC callback after authentication
+  Authentication: None required
+  Response: Redirects to home page or intended destination
+
+GET /api/logout
+  Description: Logs out user and ends session
+  Authentication: None required
+  Response: Redirects to logout confirmation
+
+GET /api/auth/user
+  Description: Gets current authenticated user information
+  Authentication: Required
+  Response: User object with profile data
+  Example Response:
+  {
+    "id": "user123",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "profileImageUrl": "https://...",
+    "createdAt": "2025-01-27T00:00:00Z",
+    "updatedAt": "2025-01-27T00:00:00Z"
+  }
+
+SEARCH ENDPOINTS:
+-----------------
+POST /api/search
+  Description: Performs people search based on search type and parameters
+  Authentication: Required
+  Request Body:
+  {
+    "searchType": "name|phone|address",
+    "searchQuery": {
+      // For name search:
+      "firstName": "string (optional)",
+      "lastName": "string (required)",
+      "city": "string (optional)",
+      "state": "string (optional)"
+      
+      // For phone search:
+      "phoneNumber": "string (required)"
+      
+      // For address search:
+      "address": "string (required)",
+      "city": "string (optional)",
+      "state": "string (optional)"
+    }
+  }
+  Response:
+  {
+    "results": [/* array of people profiles */],
+    "total": 5
+  }
+
+GET /api/search/history
+  Description: Retrieves user's search history
+  Authentication: Required
+  Response: Array of search history objects
+  Example Response:
+  [
+    {
+      "id": 1,
+      "userId": "user123",
+      "searchType": "name",
+      "searchQuery": {"firstName": "John", "lastName": "Smith"},
+      "searchResults": [/* results */],
+      "createdAt": "2025-01-27T00:00:00Z"
+    }
+  ]
+
+PROFILE ENDPOINTS:
+------------------
+GET /api/profile/:id
+  Description: Gets detailed profile information for a specific person
+  Authentication: Required
+  Parameters: id (integer) - Profile ID
+  Response: Complete people profile object
+  Example Response:
+  {
+    "id": 1,
+    "firstName": "John",
+    "middleName": "Michael",
+    "lastName": "Smith",
+    "age": 45,
+    "currentAddress": "123 Main Street",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "phoneNumbers": ["555-123-4567", "555-987-6543"],
+    "emailAddresses": ["john.smith@email.com"],
+    "relatives": [
+      {"name": "Mary Smith", "relationship": "Wife", "age": 42}
+    ],
+    "associates": [
+      {"name": "Robert Johnson", "age": 47}
+    ],
+    "addressHistory": [
+      {"address": "456 Oak Avenue", "city": "Boston", "state": "MA", "dateRange": "2018-2023"}
+    ],
+    "occupation": "Software Engineer",
+    "employer": "Tech Corp Inc",
+    "education": [
+      {"degree": "Bachelor of Science", "school": "MIT"}
+    ],
+    "profileImageUrl": null,
+    "createdAt": "2025-01-27T00:00:00Z",
+    "updatedAt": "2025-01-27T00:00:00Z"
+  }
+
+FEATURE FLAGS ENDPOINTS:
+------------------------
+GET /api/feature-flags
+  Description: Gets all feature flags with user-specific overrides
+  Authentication: Required
+  Response: Array of feature flag objects
+  Example Response:
+  [
+    {
+      "id": 1,
+      "name": "advanced_search",
+      "description": "Enable advanced search filters",
+      "enabled": true,
+      "hasUserOverride": false,
+      "createdAt": "2025-01-27T00:00:00Z",
+      "updatedAt": "2025-01-27T00:00:00Z"
+    }
+  ]
+
+POST /api/feature-flags/:id/toggle
+  Description: Toggles a feature flag for the current user
+  Authentication: Required
+  Parameters: id (integer) - Feature flag ID
+  Request Body:
+  {
+    "enabled": true
+  }
+  Response: Updated user feature flag object
+
+4. AUTHENTICATION SYSTEM
+=========================
+
+Authentication Flow:
+1. User clicks "Sign In" button
+2. Redirected to /api/login
+3. System redirects to Replit OIDC provider
+4. User authenticates with Replit
+5. Callback to /api/callback
+6. Session created and stored in PostgreSQL
+7. User redirected to intended destination
+
+Session Management:
+- Sessions stored in PostgreSQL sessions table
+- Session TTL: 7 days
+- Automatic token refresh using refresh tokens
+- Secure HTTP-only cookies
+
+User Claims (from OIDC token):
+- sub: Unique user ID
+- email: User email address
+- first_name: User's first name
+- last_name: User's last name
+- profile_image_url: Profile picture URL
+
+Middleware Protection:
+- isAuthenticated middleware protects all API routes
+- Automatic token refresh on expiration
+- Returns 401 Unauthorized for invalid/expired sessions
+
+5. DATABASE SCHEMA
+==================
+
+TABLES:
+-------
+
+sessions (Required for Replit Auth)
+- sid (varchar, primary key)
+- sess (jsonb)
+- expire (timestamp)
+- Index: IDX_session_expire on expire
+
+users (Required for Replit Auth)
+- id (varchar, primary key, UUID default)
+- email (varchar, unique)
+- firstName (varchar)
+- lastName (varchar)
+- profileImageUrl (varchar)
+- createdAt (timestamp, default now)
+- updatedAt (timestamp, default now)
+
+search_history
+- id (serial, primary key)
+- userId (varchar, foreign key to users.id)
+- searchType (varchar) - 'name', 'phone', 'address'
+- searchQuery (jsonb)
+- searchResults (jsonb)
+- createdAt (timestamp, default now)
+
+feature_flags
+- id (serial, primary key)
+- name (varchar, unique)
+- description (text)
+- enabled (boolean, default false)
+- createdAt (timestamp, default now)
+- updatedAt (timestamp, default now)
+
+user_feature_flags
+- id (serial, primary key)
+- userId (varchar, foreign key to users.id)
+- featureFlagId (integer, foreign key to feature_flags.id)
+- enabled (boolean)
+- createdAt (timestamp, default now)
+
+people_profiles
+- id (serial, primary key)
+- firstName (varchar)
+- middleName (varchar)
+- lastName (varchar)
+- age (integer)
+- currentAddress (text)
+- city (varchar)
+- state (varchar)
+- zipCode (varchar)
+- phoneNumbers (jsonb array)
+- emailAddresses (jsonb array)
+- relatives (jsonb array)
+- associates (jsonb array)
+- addressHistory (jsonb array)
+- occupation (varchar)
+- employer (varchar)
+- education (jsonb array)
+- profileImageUrl (varchar)
+- createdAt (timestamp, default now)
+- updatedAt (timestamp, default now)
+
+RELATIONSHIPS:
+--------------
+- users 1:N search_history
+- users 1:N user_feature_flags
+- feature_flags 1:N user_feature_flags
+
+6. FRONTEND COMPONENTS
+======================
+
+Key Components:
+- App.tsx: Main application with routing
+- Landing.tsx: Landing page for unauthenticated users
+- Home.tsx: Dashboard for authenticated users
+- SearchTabs.tsx: Multi-tab search interface
+- SearchResults.tsx: Search results display
+- ProfileModal.tsx: Detailed profile viewer
+- FeatureFlags.tsx: Developer feature flag controls
+
+UI Library Components (shadcn/ui):
+- Button, Input, Select, Card, Dialog
+- Tabs, Table, Toast, Tooltip
+- Form components with validation
+
+State Management:
+- TanStack Query for server state
+- React useState for local component state
+- Custom hooks for authentication (useAuth)
+
+Routing (Wouter):
+- / - Landing page (unauthenticated) or Home (authenticated)
+- /search-results - Search results page
+
+7. FEATURE FLAGS
+================
+
+Developer Mode Access:
+- Keyboard shortcut: Ctrl+Shift+D
+- Opens feature flags overlay
+- Real-time toggle capabilities
+
+Available Feature Flags:
+- advanced_search: Advanced search filters and suggestions
+- profile_sharing: Allow users to share profiles
+- bulk_search: Enable bulk search functionality
+- dark_mode: Enable dark mode theme
+- ai_suggestions: Show AI-powered search suggestions
+
+Implementation:
+- Global feature flags with per-user overrides
+- Database-backed configuration
+- Real-time toggle without restart
+- Granular control for A/B testing
+
+8. ENVIRONMENT CONFIGURATION
+=============================
+
+Available Environment Variables:
+- DATABASE_URL: PostgreSQL connection string
+- PGDATABASE: PostgreSQL database name
+- PGHOST: PostgreSQL host
+- PGPASSWORD: PostgreSQL password
+- PGPORT: PostgreSQL port
+- PGUSER: PostgreSQL username
+- SESSION_SECRET: Session encryption secret
+- REPL_ID: Replit application ID
+- REPLIT_DOMAINS: Allowed domains for OIDC
+
+Required for Production:
+- All PostgreSQL variables for database connection
+- SESSION_SECRET for secure session management
+- REPL_ID for Replit authentication
+- REPLIT_DOMAINS for OIDC configuration
+
+9. DEPLOYMENT NOTES
+===================
+
+Development Environment:
+- Runs on port 5000 (frontend and backend)
+- Vite dev server with HMR
+- TypeScript compilation with tsx
+- Hot reload for both client and server
+
+Production Considerations:
+- Static file serving for frontend
+- Compressed assets
+- Production-optimized builds
+- Database migrations via drizzle-kit
+
+Commands:
+- npm run dev: Start development server
+- npm run build: Build for production
+- npm run db:push: Push schema changes to database
+- npm run db:push --force: Force push schema changes
+
+Security Features:
+- HTTPS enforced
+- Secure HTTP-only cookies
+- CSRF protection via session tokens
+- Input validation with Zod schemas
+- SQL injection protection via Drizzle ORM
+
+Performance Optimizations:
+- Query optimization with TanStack Query
+- Component lazy loading
+- Efficient re-renders with React memoization
+- Database indexing on frequently queried fields

@@ -1,0 +1,425 @@
+VERISCAN AI - MERMAID FLOW DIAGRAMS
+===================================
+
+=== 1. AUTHENTICATION FLOW ===
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Client App
+    participant S as Server
+    participant R as Replit OIDC
+    participant DB as PostgreSQL
+
+    Note over U,DB: User Authentication Flow
+    
+    U->>C: Click "Sign In"
+    C->>S: GET /api/login
+    S->>R: Redirect to OIDC provider
+    R->>U: Show Replit login page
+    U->>R: Enter credentials
+    R->>S: Callback with auth code
+    S->>R: Exchange code for tokens
+    R->>S: Return ID token + access token
+    S->>DB: Upsert user profile
+    DB->>S: User created/updated
+    S->>DB: Create session
+    DB->>S: Session stored
+    S->>C: Redirect to home (with session cookie)
+    C->>U: Show authenticated home page
+```
+
+=== 2. SEARCH FLOW ===
+
+```mermaid
+flowchart TD
+    A[User on Home Page] --> B{Select Search Type}
+    B --> C[Name Search]
+    B --> D[Phone Search]
+    B --> E[Address Search]
+    
+    C --> F[Enter First/Last Name, City, State]
+    D --> G[Enter Phone Number]
+    E --> H[Enter Address, City, State]
+    
+    F --> I[Validate Required Fields]
+    G --> I
+    H --> I
+    
+    I --> J{Validation Pass?}
+    J -->|No| K[Show Error Toast]
+    K --> A
+    
+    J -->|Yes| L[POST /api/search]
+    L --> M[Server Validates Search Type]
+    M --> N[Query Database]
+    N --> O[Save Search History]
+    O --> P[Return Results]
+    P --> Q[Navigate to Results Page]
+    Q --> R[Display Search Results]
+    
+    R --> S[User Clicks Profile]
+    S --> T[Open Profile Modal]
+    T --> U[GET /api/profile/:id]
+    U --> V[Display Detailed Profile]
+```
+
+=== 3. APPLICATION ARCHITECTURE ===
+
+```mermaid
+graph TB
+    subgraph "Frontend (React + TypeScript)"
+        A[App.tsx - Main Router]
+        B[Landing.tsx - Landing Page]
+        C[Home.tsx - Dashboard]
+        D[SearchTabs.tsx - Search Interface]
+        E[SearchResults.tsx - Results Display]
+        F[ProfileModal.tsx - Profile Details]
+        G[FeatureFlags.tsx - Developer Mode]
+    end
+    
+    subgraph "Backend (Express.js + TypeScript)"
+        H[routes.ts - API Endpoints]
+        I[replitAuth.ts - Authentication]
+        J[storage.ts - Data Layer]
+        K[db.ts - Database Connection]
+    end
+    
+    subgraph "Database (PostgreSQL)"
+        L[users - User Profiles]
+        M[sessions - Session Storage]
+        N[people_profiles - Search Data]
+        O[search_history - User Searches]
+        P[feature_flags - App Features]
+        Q[user_feature_flags - User Overrides]
+    end
+    
+    subgraph "External Services"
+        R[Replit OIDC - Authentication]
+        S[Neon PostgreSQL - Database Host]
+    end
+    
+    A --> B
+    A --> C
+    C --> D
+    D --> E
+    E --> F
+    A --> G
+    
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+    
+    H --> I
+    H --> J
+    I --> R
+    J --> K
+    K --> S
+    
+    K --> L
+    K --> M
+    K --> N
+    K --> O
+    K --> P
+    K --> Q
+```
+
+=== 4. FEATURE FLAGS SYSTEM ===
+
+```mermaid
+flowchart TD
+    A[User Press Ctrl+Shift+D] --> B[Open Feature Flags Modal]
+    B --> C[GET /api/feature-flags]
+    C --> D[Server Queries Database]
+    
+    subgraph "Database Queries"
+        D --> E[Get All Feature Flags]
+        D --> F[Get User Overrides]
+    end
+    
+    E --> G[Merge Flags with Overrides]
+    F --> G
+    G --> H[Return Combined Flags]
+    H --> I[Display Flags in Modal]
+    
+    I --> J[User Toggles Flag]
+    J --> K[POST /api/feature-flags/:id/toggle]
+    K --> L[Server Validates Flag ID]
+    L --> M[Update/Create User Override]
+    M --> N[Return Updated Flag]
+    N --> O[Update UI State]
+    
+    O --> P{More Changes?}
+    P -->|Yes| J
+    P -->|No| Q[Close Modal]
+    Q --> R[Continue Using App]
+```
+
+=== 5. DATABASE RELATIONSHIPS ===
+
+```mermaid
+erDiagram
+    users {
+        varchar id PK
+        varchar email UK
+        varchar firstName
+        varchar lastName
+        varchar profileImageUrl
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    sessions {
+        varchar sid PK
+        jsonb sess
+        timestamp expire
+    }
+    
+    search_history {
+        serial id PK
+        varchar userId FK
+        varchar searchType
+        jsonb searchQuery
+        jsonb searchResults
+        timestamp createdAt
+    }
+    
+    people_profiles {
+        serial id PK
+        varchar firstName
+        varchar middleName
+        varchar lastName
+        integer age
+        text currentAddress
+        varchar city
+        varchar state
+        varchar zipCode
+        jsonb phoneNumbers
+        jsonb emailAddresses
+        jsonb relatives
+        jsonb associates
+        jsonb addressHistory
+        varchar occupation
+        varchar employer
+        jsonb education
+        varchar profileImageUrl
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    feature_flags {
+        serial id PK
+        varchar name UK
+        text description
+        boolean enabled
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    user_feature_flags {
+        serial id PK
+        varchar userId FK
+        integer featureFlagId FK
+        boolean enabled
+        timestamp createdAt
+    }
+    
+    users ||--o{ search_history : "has many"
+    users ||--o{ user_feature_flags : "has many"
+    feature_flags ||--o{ user_feature_flags : "overridden by"
+```
+
+=== 6. SEARCH ALGORITHM FLOW ===
+
+```mermaid
+flowchart TD
+    A[Receive Search Request] --> B{Search Type?}
+    
+    B -->|name| C[Name Search Logic]
+    B -->|phone| D[Phone Search Logic] 
+    B -->|address| E[Address Search Logic]
+    
+    C --> F[Build Name Query]
+    D --> G[Build Phone Query]
+    E --> H[Build Address Query]
+    
+    F --> I[Query people_profiles table]
+    G --> I
+    H --> I
+    
+    I --> J[Execute Database Search]
+    J --> K[Calculate Match Scores]
+    K --> L[Sort by Relevance]
+    L --> M[Limit Results]
+    M --> N[Format Response]
+    N --> O[Save to Search History]
+    O --> P[Return Results to Client]
+    
+    subgraph "Name Search Criteria"
+        F --> F1[Match Last Name - Required]
+        F --> F2[Match First Name - Optional]
+        F --> F3[Match City - Optional]
+        F --> F4[Match State - Optional]
+    end
+    
+    subgraph "Phone Search Criteria"
+        G --> G1[Exact Phone Match]
+        G --> G2[Normalized Format Match]
+    end
+    
+    subgraph "Address Search Criteria"
+        H --> H1[Match Address - Required]
+        H --> H2[Match City - Optional]
+        H --> H3[Match State - Optional]
+    end
+```
+
+=== 7. USER SESSION LIFECYCLE ===
+
+```mermaid
+stateDiagram-v2
+    [*] --> Anonymous
+    Anonymous --> Authenticating : Click Sign In
+    Authenticating --> Authenticated : OIDC Success
+    Authenticating --> Anonymous : OIDC Failed
+    
+    Authenticated --> SessionValid : Check Token
+    SessionValid --> Authenticated : Token Valid
+    SessionValid --> RefreshingToken : Token Expired
+    RefreshingToken --> Authenticated : Refresh Success
+    RefreshingToken --> Anonymous : Refresh Failed
+    
+    Authenticated --> LoggingOut : Click Logout
+    LoggingOut --> Anonymous : Session Destroyed
+    
+    Anonymous --> [*]
+    
+    note right of Authenticated
+        Session stored in PostgreSQL
+        7-day expiration
+        HTTP-only cookies
+    end note
+    
+    note right of RefreshingToken
+        Automatic refresh using
+        refresh token from OIDC
+    end note
+```
+
+=== 8. API REQUEST FLOW ===
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant M as Middleware
+    participant H as Route Handler
+    participant S as Storage Layer
+    participant DB as Database
+    
+    Note over C,DB: Authenticated API Request Flow
+    
+    C->>M: API Request + Session Cookie
+    M->>M: Check Authentication
+    M->>M: Validate Session
+    
+    alt Session Valid
+        M->>H: Forward Request
+        H->>H: Validate Request Body
+        H->>S: Call Storage Method
+        S->>DB: Execute SQL Query
+        DB->>S: Return Results
+        S->>H: Return Processed Data
+        H->>C: JSON Response (200)
+    else Session Invalid/Expired
+        alt Has Refresh Token
+            M->>M: Attempt Token Refresh
+            M->>H: Forward Request (if refresh success)
+            H->>C: JSON Response (200)
+        else No Refresh Token
+            M->>C: Unauthorized (401)
+        end
+    else Request Validation Failed
+        H->>C: Bad Request (400)
+    else Server Error
+        H->>C: Internal Server Error (500)
+    end
+```
+
+=== 9. COMPONENT STATE MANAGEMENT ===
+
+```mermaid
+flowchart TD
+    A[App Component] --> B[TanStack Query Provider]
+    B --> C[Authentication Context]
+    
+    C --> D[Landing Page]
+    C --> E[Home Page]
+    
+    E --> F[SearchTabs Component]
+    F --> G[Local Form State]
+    F --> H[Search Mutation]
+    
+    H --> I[Server Request]
+    I --> J[Update Query Cache]
+    J --> K[Navigate to Results]
+    
+    K --> L[SearchResults Component]
+    L --> M[Query Results from Cache]
+    L --> N[Profile Modal State]
+    
+    N --> O[ProfileModal Component]
+    O --> P[Profile Query]
+    P --> Q[Display Profile Data]
+    
+    subgraph "State Management Types"
+        R[Local State - useState]
+        S[Server State - TanStack Query]
+        T[Global State - Context]
+        U[Form State - React Hook Form]
+    end
+    
+    G --> R
+    H --> S
+    C --> T
+    F --> U
+```
+
+=== 10. DEVELOPER MODE ACTIVATION ===
+
+```mermaid
+flowchart TD
+    A[User on Any Page] --> B[Press Ctrl+Shift+D]
+    B --> C{Feature Flags Available?}
+    
+    C -->|No| D[Initialize Feature Flags]
+    D --> E[Fetch from API]
+    C -->|Yes| F[Show Feature Flags Modal]
+    E --> F
+    
+    F --> G[Display Current Flags]
+    G --> H[User Interacts with Toggle]
+    H --> I[Local State Update]
+    I --> J[API Call to Toggle]
+    
+    J --> K{API Success?}
+    K -->|Yes| L[Update Global State]
+    K -->|No| M[Revert Local State]
+    M --> N[Show Error Message]
+    
+    L --> O[Reflect Changes in App]
+    O --> P{More Changes?}
+    P -->|Yes| H
+    P -->|No| Q[Close Modal]
+    
+    Q --> R[Continue App Usage]
+    N --> H
+    
+    subgraph "Available Toggles"
+        S[Advanced Search]
+        T[Profile Sharing]
+        U[Bulk Search]
+        V[Dark Mode]
+        W[AI Suggestions]
+    end
+```

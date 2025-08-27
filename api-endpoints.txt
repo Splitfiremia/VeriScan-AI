@@ -1,0 +1,442 @@
+VERISCAN AI - API ENDPOINTS REFERENCE
+=====================================
+
+BASE URL: https://b9becc29-c707-42da-a170-b5ad23c611f6-00-r66ztxx850lz.riker.replit.dev
+
+AUTHENTICATION REQUIRED: All endpoints except authentication flows require valid session
+
+=== AUTHENTICATION ENDPOINTS ===
+
+GET /api/login
+--------------
+Description: Initiates Replit OIDC authentication flow
+Method: GET
+Authentication: None
+Headers: None
+Query Parameters: None
+Response: HTTP 302 Redirect to Replit authentication
+Example: GET /api/login
+
+GET /api/callback  
+-----------------
+Description: Handles OIDC callback after user authentication
+Method: GET
+Authentication: None (handled by OIDC flow)
+Headers: None
+Query Parameters: Provided by OIDC provider
+Response: HTTP 302 Redirect to application root
+Example: GET /api/callback?code=abc123&state=xyz789
+
+GET /api/logout
+---------------
+Description: Terminates user session and logs out
+Method: GET
+Authentication: None
+Headers: None
+Query Parameters: None
+Response: HTTP 302 Redirect to Replit logout
+Example: GET /api/logout
+
+GET /api/auth/user
+------------------
+Description: Retrieves current authenticated user information
+Method: GET
+Authentication: Required
+Headers: Cookie with session
+Query Parameters: None
+Response: JSON user object
+Status Codes:
+  200: Success
+  401: Unauthorized (not logged in)
+  500: Server error
+Example Response:
+{
+  "id": "45470776",
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "profileImageUrl": "https://replit.com/public/images/profile.png",
+  "createdAt": "2025-01-27T00:00:00.000Z",
+  "updatedAt": "2025-01-27T00:00:00.000Z"
+}
+
+=== SEARCH ENDPOINTS ===
+
+POST /api/search
+----------------
+Description: Performs people search based on type and criteria
+Method: POST
+Authentication: Required
+Headers: 
+  Content-Type: application/json
+  Cookie: session
+Request Body:
+{
+  "searchType": "name|phone|address",
+  "searchQuery": {
+    // For name search:
+    "firstName": "string (optional)",
+    "lastName": "string (required for name search)",
+    "city": "string (optional)",
+    "state": "string (optional)"
+    
+    // For phone search:
+    "phoneNumber": "string (required for phone search)"
+    
+    // For address search:
+    "address": "string (required for address search)",
+    "city": "string (optional)",
+    "state": "string (optional)"
+  }
+}
+Response: JSON with search results
+Status Codes:
+  200: Success
+  400: Invalid search type or missing required fields
+  401: Unauthorized
+  500: Search failed
+Example Request (Name Search):
+{
+  "searchType": "name",
+  "searchQuery": {
+    "firstName": "John",
+    "lastName": "Smith",
+    "city": "New York",
+    "state": "NY"
+  }
+}
+Example Request (Phone Search):
+{
+  "searchType": "phone",
+  "searchQuery": {
+    "phoneNumber": "555-123-4567"
+  }
+}
+Example Request (Address Search):
+{
+  "searchType": "address",
+  "searchQuery": {
+    "address": "123 Main Street",
+    "city": "New York",
+    "state": "NY"
+  }
+}
+Example Response:
+{
+  "results": [
+    {
+      "id": 1,
+      "firstName": "John",
+      "middleName": "Michael",
+      "lastName": "Smith",
+      "age": 45,
+      "currentAddress": "123 Main Street",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "phoneNumbers": ["555-123-4567", "555-987-6543"],
+      "emailAddresses": ["john.smith@email.com"],
+      "occupation": "Software Engineer",
+      "employer": "Tech Corp Inc"
+    }
+  ],
+  "total": 1
+}
+
+GET /api/search/history
+-----------------------
+Description: Retrieves user's search history
+Method: GET
+Authentication: Required
+Headers: Cookie with session
+Query Parameters: None
+Response: JSON array of search history
+Status Codes:
+  200: Success
+  401: Unauthorized
+  500: Failed to fetch history
+Example Response:
+[
+  {
+    "id": 1,
+    "userId": "45470776",
+    "searchType": "name",
+    "searchQuery": {
+      "firstName": "John",
+      "lastName": "Smith",
+      "city": "New York",
+      "state": "NY"
+    },
+    "searchResults": [/* array of results */],
+    "createdAt": "2025-01-27T12:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "userId": "45470776",
+    "searchType": "phone",
+    "searchQuery": {
+      "phoneNumber": "555-123-4567"
+    },
+    "searchResults": [/* array of results */],
+    "createdAt": "2025-01-27T11:30:00.000Z"
+  }
+]
+
+=== PROFILE ENDPOINTS ===
+
+GET /api/profile/:id
+--------------------
+Description: Retrieves detailed profile for specific person
+Method: GET
+Authentication: Required
+Headers: Cookie with session
+Path Parameters:
+  id: integer (required) - Profile ID
+Query Parameters: None
+Response: JSON profile object
+Status Codes:
+  200: Success
+  400: Invalid profile ID (not a number)
+  401: Unauthorized
+  404: Profile not found
+  500: Server error
+Example: GET /api/profile/1
+Example Response:
+{
+  "id": 1,
+  "firstName": "John",
+  "middleName": "Michael",
+  "lastName": "Smith",
+  "age": 45,
+  "currentAddress": "123 Main Street",
+  "city": "New York",
+  "state": "NY",
+  "zipCode": "10001",
+  "phoneNumbers": ["555-123-4567", "555-987-6543"],
+  "emailAddresses": ["john.smith@email.com", "jsmith@work.com"],
+  "relatives": [
+    {
+      "name": "Mary Smith",
+      "relationship": "Wife",
+      "age": 42
+    },
+    {
+      "name": "Tommy Smith",
+      "relationship": "Son",
+      "age": 16
+    }
+  ],
+  "associates": [
+    {
+      "name": "Robert Johnson",
+      "age": 47
+    },
+    {
+      "name": "Lisa Brown",
+      "age": 39
+    }
+  ],
+  "addressHistory": [
+    {
+      "address": "456 Oak Avenue",
+      "city": "Boston",
+      "state": "MA",
+      "dateRange": "2018-2023"
+    },
+    {
+      "address": "789 Pine Road",
+      "city": "Philadelphia",
+      "state": "PA",
+      "dateRange": "2015-2018"
+    }
+  ],
+  "occupation": "Software Engineer",
+  "employer": "Tech Corp Inc",
+  "education": [
+    {
+      "degree": "Bachelor of Science",
+      "school": "MIT"
+    }
+  ],
+  "profileImageUrl": null,
+  "createdAt": "2025-01-27T00:00:00.000Z",
+  "updatedAt": "2025-01-27T00:00:00.000Z"
+}
+
+=== FEATURE FLAGS ENDPOINTS ===
+
+GET /api/feature-flags
+----------------------
+Description: Retrieves all feature flags with user overrides
+Method: GET
+Authentication: Required
+Headers: Cookie with session
+Query Parameters: None
+Response: JSON array of feature flags
+Status Codes:
+  200: Success
+  401: Unauthorized
+  500: Failed to fetch feature flags
+Example Response:
+[
+  {
+    "id": 1,
+    "name": "advanced_search",
+    "description": "Enable advanced search filters and suggestions",
+    "enabled": true,
+    "hasUserOverride": false,
+    "createdAt": "2025-01-27T00:00:00.000Z",
+    "updatedAt": "2025-01-27T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "profile_sharing",
+    "description": "Allow users to share profiles",
+    "enabled": false,
+    "hasUserOverride": true,
+    "createdAt": "2025-01-27T00:00:00.000Z",
+    "updatedAt": "2025-01-27T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "bulk_search",
+    "description": "Enable bulk search functionality",
+    "enabled": false,
+    "hasUserOverride": false,
+    "createdAt": "2025-01-27T00:00:00.000Z",
+    "updatedAt": "2025-01-27T00:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "name": "dark_mode",
+    "description": "Enable dark mode theme",
+    "enabled": true,
+    "hasUserOverride": false,
+    "createdAt": "2025-01-27T00:00:00.000Z",
+    "updatedAt": "2025-01-27T00:00:00.000Z"
+  },
+  {
+    "id": 5,
+    "name": "ai_suggestions",
+    "description": "Show AI-powered search suggestions",
+    "enabled": true,
+    "hasUserOverride": false,
+    "createdAt": "2025-01-27T00:00:00.000Z",
+    "updatedAt": "2025-01-27T00:00:00.000Z"
+  }
+]
+
+POST /api/feature-flags/:id/toggle
+-----------------------------------
+Description: Toggles feature flag for current user
+Method: POST
+Authentication: Required
+Headers: 
+  Content-Type: application/json
+  Cookie: session
+Path Parameters:
+  id: integer (required) - Feature flag ID
+Request Body:
+{
+  "enabled": boolean (required)
+}
+Response: JSON user feature flag object
+Status Codes:
+  200: Success
+  400: Invalid feature flag ID
+  401: Unauthorized
+  500: Failed to toggle feature flag
+Example: POST /api/feature-flags/2/toggle
+Example Request:
+{
+  "enabled": true
+}
+Example Response:
+{
+  "id": 1,
+  "userId": "45470776",
+  "featureFlagId": 2,
+  "enabled": true,
+  "createdAt": "2025-01-27T12:00:00.000Z"
+}
+
+=== ERROR RESPONSES ===
+
+All endpoints may return the following error responses:
+
+401 Unauthorized:
+{
+  "message": "Unauthorized"
+}
+
+400 Bad Request:
+{
+  "message": "Invalid search type"
+}
+{
+  "message": "Invalid profile ID" 
+}
+{
+  "message": "Invalid feature flag ID"
+}
+
+404 Not Found:
+{
+  "message": "Profile not found"
+}
+
+500 Internal Server Error:
+{
+  "message": "Failed to fetch user"
+}
+{
+  "message": "Search failed"
+}
+{
+  "message": "Failed to fetch search history"
+}
+{
+  "message": "Failed to fetch profile"
+}
+{
+  "message": "Failed to fetch feature flags"
+}
+{
+  "message": "Failed to toggle feature flag"
+}
+
+=== RATE LIMITING ===
+
+Currently no rate limiting is implemented.
+Consider implementing rate limiting for production use.
+
+=== AUTHENTICATION NOTES ===
+
+Session Management:
+- Sessions expire after 7 days
+- Automatic token refresh using refresh tokens
+- Session data stored in PostgreSQL
+- Secure HTTP-only cookies
+
+Required Headers:
+- All authenticated endpoints require session cookie
+- Content-Type: application/json for POST requests
+
+OIDC Claims Available:
+- sub: Unique user identifier
+- email: User email address  
+- first_name: User's first name
+- last_name: User's last name
+- profile_image_url: Profile picture URL
+
+=== TESTING ===
+
+Use developer mode (Ctrl+Shift+D) to:
+- Toggle feature flags in real-time
+- Test different application states
+- Access staging features
+
+Sample test data available:
+- 5 pre-populated user profiles
+- Various phone numbers, addresses, and personal details
+- Feature flags for testing toggle functionality
