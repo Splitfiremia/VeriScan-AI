@@ -43,6 +43,7 @@ export interface IStorage {
     state?: string;
     phoneNumber?: string;
     address?: string;
+    email?: string;
   }): Promise<PeopleProfile[]>;
   getPeopleProfile(id: number): Promise<PeopleProfile | undefined>;
   createPeopleProfile(profile: InsertPeopleProfile): Promise<PeopleProfile>;
@@ -145,6 +146,7 @@ export class DatabaseStorage implements IStorage {
     state?: string;
     phoneNumber?: string;
     address?: string;
+    email?: string;
   }): Promise<PeopleProfile[]> {
     let queryBuilder = db.select().from(peopleProfiles);
     
@@ -178,6 +180,12 @@ export class DatabaseStorage implements IStorage {
           like(peopleProfiles.currentAddress, `%${query.address}%`),
           sql`${peopleProfiles.addressHistory}::text LIKE ${`%${query.address}%`}`
         )
+      );
+    }
+    
+    if (query.email) {
+      conditions.push(
+        sql`${peopleProfiles.emailAddresses}::text LIKE ${`%${query.email}%`}`
       );
     }
     

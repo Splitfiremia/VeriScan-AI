@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { User, Phone, MapPin, Search } from "lucide-react";
+import { User, Phone, MapPin, Search, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
@@ -88,6 +88,10 @@ export default function SearchTabs() {
     city: "",
     state: "",
   });
+  
+  const [emailSearch, setEmailSearch] = useState({
+    email: "",
+  });
 
   const searchMutation = useMutation({
     mutationFn: async (searchData: { searchType: string; searchQuery: any }) => {
@@ -104,6 +108,8 @@ export default function SearchTabs() {
         searchParams.set('q', phoneSearch.phoneNumber);
       } else if (activeTab === 'address') {
         searchParams.set('q', `${addressSearch.address} ${addressSearch.city}`.trim());
+      } else if (activeTab === 'email') {
+        searchParams.set('q', emailSearch.email);
       }
       
       setLocation(`/search-results?${searchParams.toString()}`);
@@ -180,11 +186,28 @@ export default function SearchTabs() {
     });
   };
 
+  const handleEmailSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailSearch.email.trim()) {
+      toast({
+        title: "Email Required",
+        description: "Please enter an email address to search.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    searchMutation.mutate({
+      searchType: 'email',
+      searchQuery: emailSearch,
+    });
+  };
+
   return (
     <Card className="bg-white/10 backdrop-blur-sm border-white/20">
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/15 border border-white/20">
+          <TabsList className="grid w-full grid-cols-4 mb-6 bg-white/15 border border-white/20">
             <TabsTrigger 
               value="name" 
               className="text-white font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
@@ -208,6 +231,14 @@ export default function SearchTabs() {
             >
               <MapPin className="w-4 h-4 mr-2" />
               Address Search
+            </TabsTrigger>
+            <TabsTrigger 
+              value="email"
+              className="text-white font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
+              data-testid="tab-email-search"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Email Search
             </TabsTrigger>
           </TabsList>
 
@@ -368,6 +399,35 @@ export default function SearchTabs() {
               >
                 <Search className="w-4 h-4 mr-2" />
                 {searchMutation.isPending ? "Searching..." : "Search Address"}
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="email">
+            <form onSubmit={handleEmailSearch} className="space-y-4">
+              <div className="flex justify-center">
+                <div className="w-full max-w-md">
+                  <Label htmlFor="emailAddress" className="text-white mb-2 block">Email Address</Label>
+                  <Input
+                    id="emailAddress"
+                    type="email"
+                    placeholder="Enter email address (e.g., john@example.com)"
+                    value={emailSearch.email}
+                    onChange={(e) => setEmailSearch(prev => ({ ...prev, email: e.target.value }))}
+                    className="bg-white border-0 text-foreground placeholder-muted-foreground"
+                    data-testid="input-email-address"
+                  />
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                size="lg"
+                disabled={searchMutation.isPending}
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+                data-testid="button-search-email"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                {searchMutation.isPending ? "Searching..." : "Search Email"}
               </Button>
             </form>
           </TabsContent>

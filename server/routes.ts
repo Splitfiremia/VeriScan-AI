@@ -27,7 +27,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { searchType, searchQuery } = req.body;
 
       // Validate search type
-      if (!['name', 'phone', 'address'].includes(searchType)) {
+      if (!['name', 'phone', 'address', 'email'].includes(searchType)) {
         return res.status(400).json({ message: "Invalid search type" });
       }
 
@@ -50,6 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           address: searchQuery.address,
           city: searchQuery.city,
           state: searchQuery.state,
+        });
+      } else if (searchType === 'email') {
+        results = await storage.searchPeople({
+          email: searchQuery.email,
         });
       }
 
