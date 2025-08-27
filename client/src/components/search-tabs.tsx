@@ -77,7 +77,7 @@ export default function SearchTabs() {
     firstName: "",
     lastName: "",
     city: "",
-    state: "",
+    state: "ALL",
   });
   
   const [phoneSearch, setPhoneSearch] = useState({
@@ -87,7 +87,7 @@ export default function SearchTabs() {
   const [addressSearch, setAddressSearch] = useState({
     address: "",
     city: "",
-    state: "",
+    state: "ALL",
   });
   
   const [emailSearch, setEmailSearch] = useState({
