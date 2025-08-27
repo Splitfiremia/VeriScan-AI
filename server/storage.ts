@@ -185,7 +185,8 @@ export class DatabaseStorage implements IStorage {
       queryBuilder = queryBuilder.where(and(...conditions));
     }
     
-    return await queryBuilder.limit(50);
+    const results = await queryBuilder.limit(50);
+    return results;
   }
 
   async getPeopleProfile(id: number): Promise<PeopleProfile | undefined> {

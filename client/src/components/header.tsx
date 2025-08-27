@@ -74,13 +74,13 @@ export default function Header() {
               
               <div className="flex items-center space-x-2">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={user?.profileImageUrl} />
+                  <AvatarImage src={(user as any)?.profileImageUrl} />
                   <AvatarFallback data-testid="avatar-fallback">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    {(user as any)?.firstName?.[0]}{(user as any)?.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium" data-testid="text-username">
-                  {user?.firstName} {user?.lastName}
+                  {(user as any)?.firstName} {(user as any)?.lastName}
                 </span>
               </div>
               

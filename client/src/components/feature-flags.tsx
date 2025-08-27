@@ -29,22 +29,24 @@ export default function FeatureFlags({ visible }: FeatureFlagsProps) {
     setShowDevMode(visible);
   }, [visible]);
 
-  const { data: featureFlags = [] } = useQuery({
+  const { data: featureFlags = [], error } = useQuery({
     queryKey: ['/api/feature-flags'],
     enabled: showDevMode,
-    onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
-    },
   });
+
+  // Handle errors in useEffect
+  useEffect(() => {
+    if (error && isUnauthorizedError(error as Error)) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [error, toast]);
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, enabled }: { id: number; enabled: boolean }) => {
@@ -119,10 +121,10 @@ export default function FeatureFlags({ visible }: FeatureFlagsProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {featureFlags.length === 0 ? (
+              {(featureFlags as FeatureFlag[]).length === 0 ? (
                 <p className="text-sm text-muted-foreground">No feature flags available</p>
               ) : (
-                featureFlags.map((flag: FeatureFlag) => (
+                (featureFlags as FeatureFlag[]).map((flag: FeatureFlag) => (
                   <div 
                     key={flag.id} 
                     className="flex items-center justify-between"

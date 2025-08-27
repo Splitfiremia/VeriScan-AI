@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Perform search based on type
-      let results = [];
+      let results: any[] = [];
       
       if (searchType === 'name') {
         results = await storage.searchPeople({

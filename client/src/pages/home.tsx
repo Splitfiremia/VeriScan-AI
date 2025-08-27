@@ -35,7 +35,7 @@ export default function Home() {
               Find Anyone, Verify Everything
             </h1>
             <p className="text-xl mb-8 opacity-90">
-              Welcome back, {user?.firstName || 'User'}! Advanced AI-powered people search and verification platform
+              Welcome back, {(user as any)?.firstName || 'User'}! Advanced AI-powered people search and verification platform
             </p>
             
             <SearchTabs />

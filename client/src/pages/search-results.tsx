@@ -51,8 +51,8 @@ export default function SearchResults({ searchParams }: SearchResultsProps) {
     return null;
   }
 
-  const results: PeopleProfile[] = searchResults?.results || [];
-  const total = searchResults?.total || 0;
+  const results: PeopleProfile[] = (searchResults as any)?.results || [];
+  const total = (searchResults as any)?.total || 0;
 
   const getMatchPercentage = (profile: PeopleProfile, index: number) => {
     // Simple match calculation for demo purposes

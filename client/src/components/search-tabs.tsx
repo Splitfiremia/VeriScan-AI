@@ -13,7 +13,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 
 const US_STATES = [
-  { value: "", label: "All States" },
+  { value: "ALL", label: "All States" },
   { value: "AL", label: "Alabama" },
   { value: "AK", label: "Alaska" },
   { value: "AZ", label: "Arizona" },

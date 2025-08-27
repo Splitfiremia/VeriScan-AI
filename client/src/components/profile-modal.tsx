@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Phone, Mail, MapPin, Briefcase, Users, Home, History, Bookmark, Share, Flag, X } from "lucide-react";
+import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { PeopleProfile } from "@shared/schema";
@@ -20,19 +21,21 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['/api/profile', profileId],
     enabled: !!profileId,
-    onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
-    },
   });
+
+  // Handle errors in useEffect
+  useEffect(() => {
+    if (error && isUnauthorizedError(error as Error)) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [error, toast]);
 
   if (error && !isUnauthorizedError(error as Error)) {
     return (
@@ -83,16 +86,16 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
             <div className="lg:col-span-1">
               <div className="text-center mb-6">
                 <img 
-                  src={profile.profileImageUrl || `https://ui-avatars.com/api/?name=${profile.firstName}+${profile.lastName}&size=200&background=random`}
-                  alt={`${profile.firstName} ${profile.lastName} detailed profile`}
+                  src={(profile as any).profileImageUrl || `https://ui-avatars.com/api/?name=${(profile as any).firstName}+${(profile as any).lastName}&size=200&background=random`}
+                  alt={`${(profile as any).firstName} ${(profile as any).lastName} detailed profile`}
                   className="w-32 h-32 rounded-full object-cover mx-auto mb-4"
                   data-testid="img-profile-avatar"
                 />
                 <h3 className="text-xl font-bold" data-testid="text-profile-name">
-                  {profile.firstName} {profile.middleName} {profile.lastName}
+                  {(profile as any).firstName} {(profile as any).middleName} {(profile as any).lastName}
                 </h3>
                 <p className="text-muted-foreground" data-testid="text-profile-location">
-                  {profile.age && `Age ${profile.age} • `}{profile.city}, {profile.state}
+                  {(profile as any).age && `Age ${(profile as any).age} • `}{(profile as any).city}, {(profile as any).state}
                 </p>
               </div>
               
@@ -101,16 +104,16 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
                   <CardTitle className="text-base">Contact Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  {Array.isArray(profile.phoneNumbers) && profile.phoneNumbers.length > 0 && (
+                  {Array.isArray((profile as any).phoneNumbers) && (profile as any).phoneNumbers.length > 0 && (
                     <div className="flex items-center space-x-2" data-testid="contact-phone">
                       <Phone className="w-4 h-4 text-primary" />
-                      <span>{profile.phoneNumbers[0]}</span>
+                      <span>{(profile as any).phoneNumbers[0]}</span>
                     </div>
                   )}
-                  {Array.isArray(profile.emailAddresses) && profile.emailAddresses.length > 0 && (
+                  {Array.isArray((profile as any).emailAddresses) && (profile as any).emailAddresses.length > 0 && (
                     <div className="flex items-center space-x-2" data-testid="contact-email">
                       <Mail className="w-4 h-4 text-primary" />
-                      <span>{profile.emailAddresses[0]}</span>
+                      <span>{(profile as any).emailAddresses[0]}</span>
                     </div>
                   )}
                 </CardContent>
@@ -152,7 +155,7 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
             {/* Detailed Information */}
             <div className="lg:col-span-2 space-y-6">
               {/* Current Address */}
-              {profile.currentAddress && (
+              {(profile as any).currentAddress && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -163,10 +166,10 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
                   <CardContent>
                     <div className="text-sm">
                       <p className="font-medium" data-testid="text-current-address">
-                        {profile.currentAddress}
+                        {(profile as any).currentAddress}
                       </p>
                       <p className="text-muted-foreground">
-                        {profile.city}, {profile.state} {profile.zipCode}
+                        {(profile as any).city}, {(profile as any).state} {(profile as any).zipCode}
                       </p>
                     </div>
                   </CardContent>
@@ -174,7 +177,7 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
               )}
 
               {/* Address History */}
-              {Array.isArray(profile.addressHistory) && profile.addressHistory.length > 0 && (
+              {Array.isArray((profile as any).addressHistory) && (profile as any).addressHistory.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -184,7 +187,7 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3 text-sm">
-                      {profile.addressHistory.map((address: any, index: number) => (
+                      {(profile as any).addressHistory.map((address: any, index: number) => (
                         <div key={index} className="flex justify-between" data-testid={`address-history-${index}`}>
                           <div>
                             <p className="font-medium">{address.address}</p>
@@ -199,8 +202,8 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
               )}
 
               {/* Associates & Relatives */}
-              {(Array.isArray(profile.relatives) && profile.relatives.length > 0) || 
-               (Array.isArray(profile.associates) && profile.associates.length > 0) && (
+              {(Array.isArray((profile as any).relatives) && (profile as any).relatives.length > 0) || 
+               (Array.isArray((profile as any).associates) && (profile as any).associates.length > 0) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -210,13 +213,13 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      {Array.isArray(profile.relatives) && profile.relatives.map((relative: any, index: number) => (
+                      {Array.isArray((profile as any).relatives) && (profile as any).relatives.map((relative: any, index: number) => (
                         <div key={index} data-testid={`relative-${index}`}>
                           <p className="font-medium">{relative.name}</p>
                           <p className="text-muted-foreground">{relative.relationship} • Age {relative.age}</p>
                         </div>
                       ))}
-                      {Array.isArray(profile.associates) && profile.associates.map((associate: any, index: number) => (
+                      {Array.isArray((profile as any).associates) && (profile as any).associates.map((associate: any, index: number) => (
                         <div key={index} data-testid={`associate-${index}`}>
                           <p className="font-medium">{associate.name}</p>
                           <p className="text-muted-foreground">Associate • Age {associate.age}</p>
@@ -228,7 +231,7 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
               )}
 
               {/* Professional Information */}
-              {(profile.occupation || profile.employer) && (
+              {((profile as any).occupation || (profile as any).employer) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -238,18 +241,18 @@ export default function ProfileModal({ profileId, onClose }: ProfileModalProps) 
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm space-y-2">
-                      {profile.occupation && (
+                      {(profile as any).occupation && (
                         <div>
-                          <p className="font-medium" data-testid="text-occupation">{profile.occupation}</p>
-                          {profile.employer && (
-                            <p className="text-muted-foreground" data-testid="text-employer">{profile.employer}</p>
+                          <p className="font-medium" data-testid="text-occupation">{(profile as any).occupation}</p>
+                          {(profile as any).employer && (
+                            <p className="text-muted-foreground" data-testid="text-employer">{(profile as any).employer}</p>
                           )}
                         </div>
                       )}
-                      {Array.isArray(profile.education) && profile.education.length > 0 && (
+                      {Array.isArray((profile as any).education) && (profile as any).education.length > 0 && (
                         <div className="mt-3">
                           <p className="text-muted-foreground">Education:</p>
-                          {profile.education.map((edu: any, index: number) => (
+                          {(profile as any).education.map((edu: any, index: number) => (
                             <p key={index} className="text-muted-foreground" data-testid={`education-${index}`}>
                               {edu.degree} - {edu.school}
                             </p>
