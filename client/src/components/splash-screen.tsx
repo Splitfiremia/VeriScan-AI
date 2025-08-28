@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Shield, Zap, CheckCircle } from "lucide-react";
-import logoUrl from "@assets/generated_images/VeriScan_AI_logo_transparent_0cc53648.png";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -26,18 +25,6 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-r from-primary to-secondary">
       <div className="text-center text-white animate-fadeIn">
         <div className="mb-8">
-          <div className="inline-flex items-center justify-center w-32 h-32 rounded-full mb-6 animate-pulse" style={{ background: 'transparent' }}>
-            <img 
-              src={logoUrl} 
-              alt="VeriScan AI Logo" 
-              className="w-24 h-24 object-contain drop-shadow-lg"
-              style={{ 
-                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))',
-                background: 'transparent'
-              }}
-              data-testid="img-splash-logo"
-            />
-          </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2" data-testid="text-splash-title">
             VeriScan AI
           </h1>

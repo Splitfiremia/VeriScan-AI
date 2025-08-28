@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Clock, KeyRound, Search, CheckCircle, Zap } from "lucide-react";
-import logoUrl from "@assets/generated_images/VeriScan_AI_logo_transparent_0cc53648.png";
 
 export default function Landing() {
   return (
@@ -11,18 +10,6 @@ export default function Landing() {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 py-24 text-center">
           <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full mb-6" style={{ background: 'transparent' }}>
-              <img 
-                src={logoUrl} 
-                alt="VeriScan AI Logo" 
-                className="w-24 h-24 object-contain drop-shadow-lg"
-                style={{ 
-                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
-                  background: 'transparent'
-                }}
-                data-testid="img-hero-logo"
-              />
-            </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-4">VeriScan AI</h1>
             <p className="text-xl md:text-2xl opacity-90 mb-8">
               Advanced People Search & Verification Platform

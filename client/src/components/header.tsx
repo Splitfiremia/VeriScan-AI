@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Menu } from "lucide-react";
 import { useState } from "react";
-import logoUrl from "@assets/generated_images/VeriScan_AI_logo_transparent_0cc53648.png";
 
 export default function Header() {
   const { user } = useAuth();
@@ -15,13 +14,6 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <img 
-                src={logoUrl} 
-                alt="VeriScan AI Logo" 
-                className="w-10 h-10 object-contain drop-shadow-sm"
-                style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
-                data-testid="img-logo"
-              />
               <span className="text-xl font-bold" data-testid="text-logo">VeriScan AI</span>
             </div>
             
