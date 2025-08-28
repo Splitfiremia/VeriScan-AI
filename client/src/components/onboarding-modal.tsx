@@ -176,11 +176,11 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
     <div className="p-8 text-center">
       <DialogTitle className="sr-only">Welcome to VeriScan AI</DialogTitle>
       <div className="mb-6">
-        <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
+        <div className="mb-6">
           <img 
             src={logoUrl} 
             alt="VeriScan AI Logo" 
-            className="w-20 h-20 object-contain"
+            className="w-60 h-60 object-contain mx-auto"
             style={{ 
               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
               background: 'transparent'
