@@ -12,7 +12,7 @@ interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-type OnboardingStep = 'welcome' | 'features' | 'auth-options' | 'signup' | 'login' | 'test-login' | 'complete';
+type OnboardingStep = 'welcome' | 'auth-options' | 'signup' | 'login' | 'test-login';
 
 export default function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
@@ -23,10 +23,7 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
   };
 
   const handleTestLogin = () => {
-    setCurrentStep('complete');
-  };
-
-  const handleCompleteOnboarding = () => {
+    // For demo purposes, just complete onboarding
     onComplete();
   };
 
@@ -60,7 +57,7 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
       </ul>
       
       <Button 
-        onClick={() => setCurrentStep('features')} 
+        onClick={() => setCurrentStep('auth-options')} 
         className="w-full"
         data-testid="button-get-started"
       >
@@ -237,102 +234,16 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
     </div>
   );
 
-  const renderFeatures = () => (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-features-title">
-        Powerful Search Features
-      </h2>
-      
-      <div className="space-y-6 mb-8">
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-            <Search className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Multi-Type Search</h3>
-            <p className="text-sm text-muted-foreground">Search by name, phone number, email, or address with AI-powered accuracy</p>
-          </div>
-        </div>
-        
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-            <Database className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Comprehensive Results</h3>
-            <p className="text-sm text-muted-foreground">Get detailed profiles with contact info, address history, and associated records</p>
-          </div>
-        </div>
-        
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-            <Lock className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Privacy & Security</h3>
-            <p className="text-sm text-muted-foreground">Your searches are confidential and subjects are never notified</p>
-          </div>
-        </div>
-      </div>
-      
-      <Button 
-        onClick={() => setCurrentStep('auth-options')} 
-        className="w-full"
-        data-testid="button-continue-features"
-      >
-        Continue to Sign Up
-      </Button>
-    </div>
-  );
-
-  const renderComplete = () => (
-    <div className="p-8 text-center">
-      <div className="mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-          <UserCheck className="w-8 h-8 text-green-600" />
-        </div>
-        <h2 className="text-2xl font-bold mb-2" data-testid="text-complete-title">
-          Welcome to VeriScan AI!
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          You're all set to start searching and verifying people with our advanced platform.
-        </p>
-      </div>
-      
-      <div className="bg-muted/30 rounded-lg p-4 mb-6">
-        <h3 className="font-semibold mb-2">Quick Start Tips:</h3>
-        <ul className="text-sm text-muted-foreground space-y-1 text-left">
-          <li>• Try searching by name to find comprehensive profiles</li>
-          <li>• Use phone numbers to verify contact information</li>
-          <li>• Address searches show current and historical data</li>
-          <li>• Email searches reveal associated accounts</li>
-        </ul>
-      </div>
-      
-      <Button 
-        onClick={handleCompleteOnboarding} 
-        className="w-full"
-        data-testid="button-start-searching"
-      >
-        Start Searching Now
-      </Button>
-    </div>
-  );
-
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'welcome':
         return renderWelcomeSlide();
-      case 'features':
-        return renderFeatures();
       case 'auth-options':
         return renderAuthOptions();
       case 'login':
         return renderLogin();
       case 'test-login':
         return renderTestLogin();
-      case 'complete':
-        return renderComplete();
       default:
         return renderWelcomeSlide();
     }
