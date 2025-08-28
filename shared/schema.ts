@@ -30,9 +30,27 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
+  phone: varchar("phone"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  dateOfBirth: varchar("date_of_birth"),
+  address: text("address"),
+  bio: text("bio"),
+  interests: text("interests"),
   profileImageUrl: varchar("profile_image_url"),
+  // Authentication fields
+  passwordHash: varchar("password_hash"),
+  emailVerified: boolean("email_verified").default(false),
+  phoneVerified: boolean("phone_verified").default(false),
+  // Permissions
+  notificationsEnabled: boolean("notifications_enabled").default(true),
+  contactsAccessEnabled: boolean("contacts_access_enabled").default(false),
+  // 2FA
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  twoFactorSecret: varchar("two_factor_secret"),
+  // Metadata
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  authMethod: varchar("auth_method"), // 'email', 'phone', 'social'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -92,6 +110,75 @@ export const peopleProfiles = pgTable("people_profiles", {
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// User onboarding schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  passwordHash: true, // Handle separately for security
+});
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
+// Profile setup schemas
+export const profileCoreSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  dateOfBirth: z.string().optional(),
+  address: z.string().optional(),
+});
+export type ProfileCore = z.infer<typeof profileCoreSchema>;
+
+export const profileAdditionalSchema = z.object({
+  bio: z.string().optional(),
+  interests: z.string().optional(),
+});
+export type ProfileAdditional = z.infer<typeof profileAdditionalSchema>;
+
+export const permissionsSchema = z.object({
+  notificationsEnabled: z.boolean().default(true),
+  contactsAccessEnabled: z.boolean().default(false),
+});
+export type Permissions = z.infer<typeof permissionsSchema>;
+
+// Authentication schemas
+export const signupCredentialsSchema = z.object({
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+  authMethod: z.enum(['email', 'phone', 'social']),
+}).refine((data) => {
+  if (data.authMethod === 'email' && !data.email) {
+    return false;
+  }
+  if (data.authMethod === 'phone' && !data.phone) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Email or phone is required based on auth method",
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+export type SignupCredentials = z.infer<typeof signupCredentialsSchema>;
+
+export const loginCredentialsSchema = z.object({
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(1, "Password is required"),
+});
+export type LoginCredentials = z.infer<typeof loginCredentialsSchema>;
+
+export const verificationCodeSchema = z.object({
+  code: z.string().length(6, "Verification code must be 6 digits"),
+});
+export type VerificationCode = z.infer<typeof verificationCodeSchema>;
+
+export const twoFactorCodeSchema = z.object({
+  code: z.string().length(6, "2FA code must be 6 digits"),
+});
+export type TwoFactorCode = z.infer<typeof twoFactorCodeSchema>;
 
 export const insertSearchHistorySchema = createInsertSchema(searchHistory).omit({
   id: true,

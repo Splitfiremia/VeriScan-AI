@@ -1,34 +1,154 @@
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserCheck, Mail, Phone, Search, Database, Lock, FlaskConical } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { UserCheck, Mail, Phone, Search, Database, Lock, FlaskConical, User, Shield, Settings, Bell, Contact } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface OnboardingModalProps {
   open: boolean;
   onComplete: () => void;
 }
 
-type OnboardingStep = 'welcome' | 'auth-options' | 'signup' | 'login' | 'test-login';
+type OnboardingStep = 
+  | 'welcome' 
+  | 'login-gate'
+  | 'signup-auth-method'
+  | 'signup-credentials'
+  | 'verify-code'
+  | 'profile-core'
+  | 'profile-additional'
+  | 'permissions'
+  | 'onboarding-complete'
+  | 'login-credentials'
+  | 'login-2fa'
+  | 'login-complete'
+  | 'test-login';
+
+type AuthMethod = 'email' | 'phone' | 'social';
+type UserType = 'new' | 'returning';
 
 export default function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
-  const [authMethod, setAuthMethod] = useState<string>('');
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
+  const [userType, setUserType] = useState<UserType>('new');
+  const [formData, setFormData] = useState({
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    verificationCode: '',
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    address: '',
+    bio: '',
+    interests: '',
+    notifications: false,
+    contacts: false,
+    twoFactorEnabled: false,
+    twoFactorCode: ''
+  });
+  const { toast } = useToast();
 
   const handleSignIn = () => {
     window.location.href = "/api/login";
   };
 
   const handleTestLogin = () => {
-    // For demo purposes, just complete onboarding
     onComplete();
   };
 
-  const renderWelcomeSlide = () => (
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSendVerificationCode = () => {
+    if (!formData.email && !formData.phone) {
+      toast({
+        title: "Missing Information",
+        description: `Please enter your ${authMethod}.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    toast({
+      title: "Verification Code Sent",
+      description: `A verification code has been sent to your ${authMethod === 'email' ? 'email' : 'phone'}.`,
+    });
+    setCurrentStep('verify-code');
+  };
+
+  const handleVerifyCode = () => {
+    if (formData.verificationCode.length === 6) {
+      setCurrentStep('profile-core');
+    } else {
+      toast({
+        title: "Invalid Code",
+        description: "Please enter a valid 6-digit verification code.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleProfileCore = () => {
+    if (!formData.firstName || !formData.lastName) {
+      toast({
+        title: "Required Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setCurrentStep('profile-additional');
+  };
+
+  const handleProfileAdditional = () => {
+    setCurrentStep('permissions');
+  };
+
+  const handlePermissions = () => {
+    setCurrentStep('onboarding-complete');
+  };
+
+  const handleLoginCredentials = () => {
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Missing Credentials",
+        description: "Please enter your email and password.",
+        variant: "destructive"
+      });
+      return;
+    }
+    // Simulate checking if 2FA is enabled
+    const has2FA = Math.random() > 0.5; // Simulate 50% chance of 2FA
+    if (has2FA) {
+      setCurrentStep('login-2fa');
+    } else {
+      setCurrentStep('login-complete');
+    }
+  };
+
+  const handleLogin2FA = () => {
+    if (formData.twoFactorCode.length === 6) {
+      setCurrentStep('login-complete');
+    } else {
+      toast({
+        title: "Invalid 2FA Code",
+        description: "Please enter a valid 6-digit 2FA code.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Welcome / Value Prop Slide
+  const renderWelcome = () => (
     <div className="p-8 text-center">
+      <DialogTitle className="sr-only">Welcome to VeriScan AI</DialogTitle>
       <div className="mb-6">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
           <UserCheck className="w-8 h-8 text-primary" />
@@ -57,7 +177,7 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
       </ul>
       
       <Button 
-        onClick={() => setCurrentStep('auth-options')} 
+        onClick={() => setCurrentStep('login-gate')} 
         className="w-full"
         data-testid="button-get-started"
       >
@@ -66,38 +186,89 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
     </div>
   );
 
-  const renderAuthOptions = () => (
+  // Login / Registration Gate
+  const renderLoginGate = () => (
+    <div className="p-8 text-center">
+      <DialogTitle className="sr-only">Sign Up or Log In</DialogTitle>
+      <h2 className="text-2xl font-bold mb-6" data-testid="text-login-gate-title">
+        Join VeriScan AI
+      </h2>
+      
+      <div className="space-y-4">
+        <Button
+          onClick={() => {
+            setUserType('new');
+            setCurrentStep('signup-auth-method');
+          }}
+          className="w-full h-12 text-lg"
+          data-testid="button-sign-up"
+        >
+          Sign Up - New User
+        </Button>
+        
+        <Button
+          variant="outline"
+          onClick={() => {
+            setUserType('returning');
+            setCurrentStep('login-credentials');
+          }}
+          className="w-full h-12 text-lg"
+          data-testid="button-log-in"
+        >
+          Log In - Existing User
+        </Button>
+      </div>
+      
+      <div className="mt-6 text-center">
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={() => setCurrentStep('test-login')}
+          className="text-xs"
+          data-testid="button-test-access"
+        >
+          Test Environment Access
+        </Button>
+      </div>
+    </div>
+  );
+
+  // NEW USER ONBOARDING PATH
+  
+  // Choose Auth Method (Phone/Email/Social)
+  const renderSignupAuthMethod = () => (
     <div className="p-8">
-      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-auth-title">
+      <DialogTitle className="sr-only">Choose Authentication Method</DialogTitle>
+      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-auth-method-title">
         Choose Authentication Method
       </h2>
       
       <div className="space-y-4">
         <Button
-          variant="outline"
+          variant={authMethod === 'email' ? 'default' : 'outline'}
           className="w-full flex items-center justify-center space-x-3 h-12"
-          onClick={handleSignIn}
+          onClick={() => setAuthMethod('email')}
           data-testid="button-email-auth"
         >
-          <Mail className="w-5 h-5 text-primary" />
+          <Mail className="w-5 h-5" />
           <span>Continue with Email</span>
         </Button>
         
         <Button
-          variant="outline"
+          variant={authMethod === 'phone' ? 'default' : 'outline'}
           className="w-full flex items-center justify-center space-x-3 h-12"
-          onClick={handleSignIn}
+          onClick={() => setAuthMethod('phone')}
           data-testid="button-phone-auth"
         >
-          <Phone className="w-5 h-5 text-primary" />
+          <Phone className="w-5 h-5" />
           <span>Continue with Phone</span>
         </Button>
         
         <Button
-          variant="outline"
+          variant={authMethod === 'social' ? 'default' : 'outline'}
           className="w-full flex items-center justify-center space-x-3 h-12"
-          onClick={handleSignIn}
-          data-testid="button-google-auth"
+          onClick={() => setAuthMethod('social')}
+          data-testid="button-social-auth"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -109,68 +280,559 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
         </Button>
       </div>
       
-      <div className="mt-6 text-center space-y-2">
+      <Button 
+        onClick={() => setCurrentStep('signup-credentials')} 
+        className="w-full mt-6"
+        data-testid="button-continue-auth"
+      >
+        Continue
+      </Button>
+      
+      <div className="text-center mt-4">
         <Button 
           variant="link" 
-          onClick={() => setCurrentStep('login')}
-          data-testid="button-existing-account"
+          size="sm"
+          onClick={() => setCurrentStep('login-gate')}
+          data-testid="button-back-to-gate"
         >
-          Already have an account? Sign In
+          Back
         </Button>
-        
-        <div className="text-xs text-muted-foreground">
-          <Button 
-            variant="link" 
-            size="sm"
-            onClick={() => setCurrentStep('test-login')}
-            className="text-xs"
-            data-testid="button-test-login"
-          >
-            Test Environment Access
-          </Button>
-        </div>
       </div>
     </div>
   );
 
-  const renderLogin = () => (
+  // Enter Credentials
+  const renderSignupCredentials = () => (
     <div className="p-8">
-      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-login-title">
+      <DialogTitle className="sr-only">Enter Your Credentials</DialogTitle>
+      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-credentials-title">
+        Enter Your Credentials
+      </h2>
+      
+      <div className="space-y-4">
+        {authMethod === 'email' && (
+          <div>
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => updateFormData('email', e.target.value)}
+              placeholder="your@email.com"
+              data-testid="input-email"
+            />
+          </div>
+        )}
+        
+        {authMethod === 'phone' && (
+          <div>
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => updateFormData('phone', e.target.value)}
+              placeholder="+1 (555) 123-4567"
+              data-testid="input-phone"
+            />
+          </div>
+        )}
+        
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={formData.password}
+            onChange={(e) => updateFormData('password', e.target.value)}
+            placeholder="Create a strong password"
+            data-testid="input-password"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+            placeholder="Confirm your password"
+            data-testid="input-confirm-password"
+          />
+        </div>
+      </div>
+      
+      <Button 
+        onClick={handleSendVerificationCode}
+        className="w-full mt-6"
+        data-testid="button-send-verification"
+      >
+        Send Verification Code
+      </Button>
+      
+      <div className="text-center mt-4">
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={() => setCurrentStep('signup-auth-method')}
+          data-testid="button-back-to-auth"
+        >
+          Back
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Verify Code
+  const renderVerifyCode = () => (
+    <div className="p-8 text-center">
+      <DialogTitle className="sr-only">Verify Your Code</DialogTitle>
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+          <Mail className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2" data-testid="text-verify-title">
+          Verify Your Code
+        </h2>
+        <p className="text-muted-foreground">
+          We sent a 6-digit code to your {authMethod === 'email' ? 'email' : 'phone'}
+        </p>
+      </div>
+      
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="verificationCode">Verification Code</Label>
+          <Input
+            id="verificationCode"
+            type="text"
+            maxLength={6}
+            value={formData.verificationCode}
+            onChange={(e) => updateFormData('verificationCode', e.target.value)}
+            placeholder="123456"
+            className="text-center text-2xl tracking-widest"
+            data-testid="input-verification-code"
+          />
+        </div>
+      </div>
+      
+      <Button 
+        onClick={handleVerifyCode}
+        className="w-full mt-6"
+        data-testid="button-verify-code"
+      >
+        Verify Code
+      </Button>
+      
+      <div className="text-center mt-4 space-y-2">
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={handleSendVerificationCode}
+          data-testid="button-resend-code"
+        >
+          Resend Code
+        </Button>
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={() => setCurrentStep('signup-credentials')}
+          data-testid="button-back-to-credentials"
+        >
+          Back
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Profile Setup: Core Info
+  const renderProfileCore = () => (
+    <div className="p-8">
+      <DialogTitle className="sr-only">Profile Setup - Core Information</DialogTitle>
+      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-profile-core-title">
+        Profile Setup: Core Info
+      </h2>
+      
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="firstName">First Name *</Label>
+            <Input
+              id="firstName"
+              value={formData.firstName}
+              onChange={(e) => updateFormData('firstName', e.target.value)}
+              placeholder="John"
+              data-testid="input-first-name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lastName">Last Name *</Label>
+            <Input
+              id="lastName"
+              value={formData.lastName}
+              onChange={(e) => updateFormData('lastName', e.target.value)}
+              placeholder="Doe"
+              data-testid="input-last-name"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+          <Input
+            id="dateOfBirth"
+            type="date"
+            value={formData.dateOfBirth}
+            onChange={(e) => updateFormData('dateOfBirth', e.target.value)}
+            data-testid="input-date-of-birth"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="address">Address</Label>
+          <Input
+            id="address"
+            value={formData.address}
+            onChange={(e) => updateFormData('address', e.target.value)}
+            placeholder="123 Main St, City, State 12345"
+            data-testid="input-address"
+          />
+        </div>
+      </div>
+      
+      <Button 
+        onClick={handleProfileCore}
+        className="w-full mt-6"
+        data-testid="button-continue-profile"
+      >
+        Continue
+      </Button>
+      
+      <div className="text-center mt-4">
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={() => setCurrentStep('verify-code')}
+          data-testid="button-back-to-verify"
+        >
+          Back
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Profile Setup: Additional Details
+  const renderProfileAdditional = () => (
+    <div className="p-8">
+      <DialogTitle className="sr-only">Profile Setup - Additional Details</DialogTitle>
+      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-profile-additional-title">
+        Profile Setup: Additional Details
+      </h2>
+      
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="bio">Bio (Optional)</Label>
+          <Textarea
+            id="bio"
+            value={formData.bio}
+            onChange={(e) => updateFormData('bio', e.target.value)}
+            placeholder="Tell us a bit about yourself..."
+            rows={3}
+            data-testid="input-bio"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="interests">Interests (Optional)</Label>
+          <Input
+            id="interests"
+            value={formData.interests}
+            onChange={(e) => updateFormData('interests', e.target.value)}
+            placeholder="Technology, Sports, Music..."
+            data-testid="input-interests"
+          />
+        </div>
+      </div>
+      
+      <Button 
+        onClick={handleProfileAdditional}
+        className="w-full mt-6"
+        data-testid="button-continue-additional"
+      >
+        Continue
+      </Button>
+      
+      <div className="text-center mt-4">
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={() => setCurrentStep('profile-core')}
+          data-testid="button-back-to-core"
+        >
+          Back
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Request Permissions
+  const renderPermissions = () => (
+    <div className="p-8">
+      <DialogTitle className="sr-only">Request Permissions</DialogTitle>
+      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-permissions-title">
+        Request Permissions
+      </h2>
+      
+      <p className="text-center text-muted-foreground mb-6">
+        Help us provide you with the best experience by allowing these permissions
+      </p>
+      
+      <div className="space-y-6">
+        <div className="flex items-start space-x-4">
+          <Checkbox
+            id="notifications"
+            checked={formData.notifications}
+            onCheckedChange={(checked) => updateFormData('notifications', checked)}
+            data-testid="checkbox-notifications"
+          />
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-2">
+              <Bell className="w-5 h-5 text-primary" />
+              <Label htmlFor="notifications" className="font-medium">
+                Notifications
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Receive important updates and search alerts
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-start space-x-4">
+          <Checkbox
+            id="contacts"
+            checked={formData.contacts}
+            onCheckedChange={(checked) => updateFormData('contacts', checked)}
+            data-testid="checkbox-contacts"
+          />
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-2">
+              <Contact className="w-5 h-5 text-primary" />
+              <Label htmlFor="contacts" className="font-medium">
+                Contacts Access
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Help you find people you know in our database
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <Button 
+        onClick={handlePermissions}
+        className="w-full mt-8"
+        data-testid="button-complete-permissions"
+      >
+        Complete Setup
+      </Button>
+      
+      <div className="text-center mt-4">
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={() => setCurrentStep('profile-additional')}
+          data-testid="button-back-to-additional"
+        >
+          Back
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Onboarding Complete
+  const renderOnboardingComplete = () => (
+    <div className="p-8 text-center">
+      <DialogTitle className="sr-only">Welcome to VeriScan AI</DialogTitle>
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+          <UserCheck className="w-8 h-8 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2" data-testid="text-onboarding-complete-title">
+          Welcome to VeriScan AI!
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          Your account is set up and ready. You can now access our powerful search features.
+        </p>
+      </div>
+      
+      <div className="bg-muted/30 rounded-lg p-4 mb-6">
+        <h3 className="font-semibold mb-2">Quick Start Tips:</h3>
+        <ul className="text-sm text-muted-foreground space-y-1 text-left">
+          <li>• Search by name to find comprehensive profiles</li>
+          <li>• Use phone numbers to verify contact information</li>
+          <li>• Address searches show current and historical data</li>
+          <li>• Email searches reveal associated accounts</li>
+        </ul>
+      </div>
+      
+      <Button 
+        onClick={onComplete}
+        className="w-full"
+        data-testid="button-start-searching"
+      >
+        Start Searching Now
+      </Button>
+    </div>
+  );
+
+  // RETURNING USER LOGIN PATH
+
+  // Enter Credentials (Username & Password)
+  const renderLoginCredentials = () => (
+    <div className="p-8">
+      <DialogTitle className="sr-only">Sign In to Your Account</DialogTitle>
+      <h2 className="text-2xl font-bold text-center mb-6" data-testid="text-login-credentials-title">
         Welcome Back
       </h2>
       
-      <div className="space-y-4 mb-6">
-        <Button 
-          className="w-full h-12"
-          onClick={handleSignIn}
-          data-testid="button-sign-in"
-        >
-          Sign In with Replit
-        </Button>
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="loginEmail">Email Address</Label>
+          <Input
+            id="loginEmail"
+            type="email"
+            value={formData.email}
+            onChange={(e) => updateFormData('email', e.target.value)}
+            placeholder="your@email.com"
+            data-testid="input-login-email"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="loginPassword">Password</Label>
+          <Input
+            id="loginPassword"
+            type="password"
+            value={formData.password}
+            onChange={(e) => updateFormData('password', e.target.value)}
+            placeholder="Enter your password"
+            data-testid="input-login-password"
+          />
+        </div>
       </div>
       
-      <div className="text-center space-y-2">
+      <Button 
+        onClick={handleLoginCredentials}
+        className="w-full mt-6"
+        data-testid="button-sign-in"
+      >
+        Sign In
+      </Button>
+      
+      <div className="text-center mt-4 space-y-2">
         <Button 
           variant="link" 
           size="sm"
           data-testid="button-forgot-password"
         >
-          Forgot password?
+          Forgot Password?
         </Button>
         <Button 
           variant="link" 
           size="sm"
-          onClick={() => setCurrentStep('auth-options')}
-          data-testid="button-back-to-options"
+          onClick={() => setCurrentStep('login-gate')}
+          data-testid="button-back-to-gate-login"
         >
-          Back to options
+          Back
         </Button>
       </div>
     </div>
   );
 
+  // 2FA Verification
+  const renderLogin2FA = () => (
+    <div className="p-8 text-center">
+      <DialogTitle className="sr-only">Two-Factor Authentication</DialogTitle>
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+          <Shield className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2" data-testid="text-2fa-title">
+          Two-Factor Authentication
+        </h2>
+        <p className="text-muted-foreground">
+          Enter the 6-digit code from your authenticator app
+        </p>
+      </div>
+      
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="twoFactorCode">2FA Code</Label>
+          <Input
+            id="twoFactorCode"
+            type="text"
+            maxLength={6}
+            value={formData.twoFactorCode}
+            onChange={(e) => updateFormData('twoFactorCode', e.target.value)}
+            placeholder="123456"
+            className="text-center text-2xl tracking-widest"
+            data-testid="input-2fa-code"
+          />
+        </div>
+      </div>
+      
+      <Button 
+        onClick={handleLogin2FA}
+        className="w-full mt-6"
+        data-testid="button-verify-2fa"
+      >
+        Verify & Sign In
+      </Button>
+      
+      <div className="text-center mt-4">
+        <Button 
+          variant="link" 
+          size="sm"
+          onClick={() => setCurrentStep('login-credentials')}
+          data-testid="button-back-to-login"
+        >
+          Back to Login
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Login Complete
+  const renderLoginComplete = () => (
+    <div className="p-8 text-center">
+      <DialogTitle className="sr-only">Login Successful</DialogTitle>
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+          <UserCheck className="w-8 h-8 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2" data-testid="text-login-complete-title">
+          Welcome Back!
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          You're successfully signed in and ready to start searching.
+        </p>
+      </div>
+      
+      <Button 
+        onClick={onComplete}
+        className="w-full"
+        data-testid="button-continue-to-app"
+      >
+        Continue to Main Feed
+      </Button>
+    </div>
+  );
+
+  // Test Login (Original implementation)
   const renderTestLogin = () => (
     <div className="p-8">
+      <DialogTitle className="sr-only">Test Environment Access</DialogTitle>
       <div className="text-center mb-6">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-4">
           <FlaskConical className="w-8 h-8 text-accent" />
@@ -225,7 +887,7 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
         <Button 
           variant="link" 
           size="sm"
-          onClick={() => setCurrentStep('auth-options')}
+          onClick={() => setCurrentStep('login-gate')}
           data-testid="button-back-to-production"
         >
           Back to production login
@@ -237,15 +899,33 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'welcome':
-        return renderWelcomeSlide();
-      case 'auth-options':
-        return renderAuthOptions();
-      case 'login':
-        return renderLogin();
+        return renderWelcome();
+      case 'login-gate':
+        return renderLoginGate();
+      case 'signup-auth-method':
+        return renderSignupAuthMethod();
+      case 'signup-credentials':
+        return renderSignupCredentials();
+      case 'verify-code':
+        return renderVerifyCode();
+      case 'profile-core':
+        return renderProfileCore();
+      case 'profile-additional':
+        return renderProfileAdditional();
+      case 'permissions':
+        return renderPermissions();
+      case 'onboarding-complete':
+        return renderOnboardingComplete();
+      case 'login-credentials':
+        return renderLoginCredentials();
+      case 'login-2fa':
+        return renderLogin2FA();
+      case 'login-complete':
+        return renderLoginComplete();
       case 'test-login':
         return renderTestLogin();
       default:
-        return renderWelcomeSlide();
+        return renderWelcome();
     }
   };
 
