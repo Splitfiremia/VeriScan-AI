@@ -188,9 +188,6 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
             data-testid="img-welcome-logo"
           />
         </div>
-        <h2 className="text-2xl font-bold mb-2" data-testid="text-welcome-title">
-          Welcome to VeriScan AI
-        </h2>
         <p className="text-muted-foreground">
           Your trusted platform for people verification and search
         </p>
