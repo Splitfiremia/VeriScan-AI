@@ -62,8 +62,8 @@ function Router() {
         onComplete={handleOnboardingComplete}
       />
       
-      {/* Test Mode Onboarding Trigger */}
-      {process.env.NODE_ENV !== 'production' && isAuthenticated && (
+      {/* Test Mode Onboarding Trigger - Always available */}
+      {isAuthenticated && (
         <button
           onClick={handleForceOnboarding}
           className="fixed bottom-4 right-4 bg-accent text-accent-foreground px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:bg-accent/90 transition-colors z-50"
