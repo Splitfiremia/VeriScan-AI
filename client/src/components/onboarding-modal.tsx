@@ -288,9 +288,11 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
             // In live experience, this would redirect to Google OAuth
             toast({
               title: "Google Sign Up",
-              description: "Redirecting to Google authentication...",
+              description: "Signing you in with Google...",
             });
-            setTimeout(() => setCurrentStep('profile-core'), 1500);
+            setTimeout(() => {
+              onComplete();
+            }, 1500);
           }}
           data-testid="button-google-signup"
         >
@@ -312,9 +314,11 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
             // In live experience, this would redirect to Apple OAuth
             toast({
               title: "Apple Sign Up",
-              description: "Redirecting to Apple authentication...",
+              description: "Signing you in with Apple ID...",
             });
-            setTimeout(() => setCurrentStep('profile-core'), 1500);
+            setTimeout(() => {
+              onComplete();
+            }, 1500);
           }}
           data-testid="button-apple-signup"
         >
