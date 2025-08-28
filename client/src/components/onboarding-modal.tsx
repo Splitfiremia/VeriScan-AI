@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCheck, Mail, Phone, Search, Database, Lock, FlaskConical, User, Shield, Settings, Bell, Contact } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import logoUrl from "@/assets/logo.png";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -175,8 +176,17 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
     <div className="p-8 text-center">
       <DialogTitle className="sr-only">Welcome to VeriScan AI</DialogTitle>
       <div className="mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-          <UserCheck className="w-8 h-8 text-primary" />
+        <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
+          <img 
+            src={logoUrl} 
+            alt="VeriScan AI Logo" 
+            className="w-20 h-20 object-contain"
+            style={{ 
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+              background: 'transparent'
+            }}
+            data-testid="img-welcome-logo"
+          />
         </div>
         <h2 className="text-2xl font-bold mb-2" data-testid="text-welcome-title">
           Welcome to VeriScan AI
