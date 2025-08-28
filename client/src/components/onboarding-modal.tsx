@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCheck, Mail, Phone, Search, Database, Lock, FlaskConical, User, Shield, Settings, Bell, Contact } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import logoUrl from "@assets/generated_images/Transparent_ornate_gold_logo_02dcc615.png";
+import logoUrl from "@assets/generated_images/VeriScan_AI_logo_transparent_0cc53648.png";
 
 interface OnboardingModalProps {
   open: boolean;
