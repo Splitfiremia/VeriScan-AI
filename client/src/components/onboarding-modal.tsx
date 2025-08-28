@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,31 @@ type UserType = 'new' | 'returning';
 
 export default function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
+  
+  // Reset to welcome step when modal is opened
+  useEffect(() => {
+    if (open) {
+      setCurrentStep('welcome');
+      // Reset form data
+      setFormData({
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+        verificationCode: '',
+        firstName: '',
+        lastName: '',
+        dateOfBirth: '',
+        address: '',
+        bio: '',
+        interests: '',
+        notifications: false,
+        contacts: false,
+        twoFactorEnabled: false,
+        twoFactorCode: ''
+      });
+    }
+  }, [open]);
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [userType, setUserType] = useState<UserType>('new');
   const [formData, setFormData] = useState({
