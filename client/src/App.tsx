@@ -17,6 +17,7 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [forceOnboarding, setForceOnboarding] = useState(false);
 
   useEffect(() => {
     if (!showSplash && !isLoading && !isAuthenticated) {
@@ -30,6 +31,12 @@ function Router() {
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
+    setForceOnboarding(false);
+  };
+
+  const handleForceOnboarding = () => {
+    setForceOnboarding(true);
+    setShowOnboarding(true);
   };
 
   if (showSplash) {
@@ -51,9 +58,20 @@ function Router() {
       </Switch>
       
       <OnboardingModal 
-        open={showOnboarding && !isAuthenticated && !isLoading}
+        open={(showOnboarding && !isAuthenticated && !isLoading) || forceOnboarding}
         onComplete={handleOnboardingComplete}
       />
+      
+      {/* Test Mode Onboarding Trigger */}
+      {process.env.NODE_ENV !== 'production' && isAuthenticated && (
+        <button
+          onClick={handleForceOnboarding}
+          className="fixed bottom-4 right-4 bg-accent text-accent-foreground px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:bg-accent/90 transition-colors z-50"
+          data-testid="button-test-onboarding"
+        >
+          🧪 Test Onboarding
+        </button>
+      )}
     </>
   );
 }
