@@ -26,11 +26,15 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-r from-primary to-secondary">
       <div className="text-center text-white animate-fadeIn">
         <div className="mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full mb-6 animate-pulse">
+          <div className="inline-flex items-center justify-center w-32 h-32 rounded-full mb-6 animate-pulse" style={{ background: 'transparent' }}>
             <img 
               src={logoUrl} 
               alt="VeriScan AI Logo" 
-              className="w-16 h-16 object-contain"
+              className="w-24 h-24 object-contain drop-shadow-lg"
+              style={{ 
+                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))',
+                background: 'transparent'
+              }}
               data-testid="img-splash-logo"
             />
           </div>

@@ -11,11 +11,15 @@ export default function Landing() {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 py-24 text-center">
           <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full mb-6">
+            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full mb-6" style={{ background: 'transparent' }}>
               <img 
                 src={logoUrl} 
                 alt="VeriScan AI Logo" 
-                className="w-16 h-16 object-contain"
+                className="w-24 h-24 object-contain drop-shadow-lg"
+                style={{ 
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                  background: 'transparent'
+                }}
                 data-testid="img-hero-logo"
               />
             </div>

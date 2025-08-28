@@ -18,7 +18,8 @@ export default function Header() {
               <img 
                 src={logoUrl} 
                 alt="VeriScan AI Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-10 h-10 object-contain drop-shadow-sm"
+                style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
                 data-testid="img-logo"
               />
               <span className="text-xl font-bold" data-testid="text-logo">VeriScan AI</span>
