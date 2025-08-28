@@ -283,7 +283,9 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
         <Button
           variant="outline"
           className="w-full flex items-center justify-center space-x-3 h-12 border-2 hover:border-primary/20"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setAuthMethod('social');
             // In live experience, this would redirect to Google OAuth
             toast({
@@ -309,7 +311,9 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
         <Button
           variant="outline"
           className="w-full flex items-center justify-center space-x-3 h-12 border-2 hover:border-primary/20 bg-black text-white hover:bg-black/90"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setAuthMethod('social');
             // In live experience, this would redirect to Apple OAuth
             toast({
