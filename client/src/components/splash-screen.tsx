@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Shield, Zap, CheckCircle } from "lucide-react";
-import logoUrl from "@/assets/logo.png";
+import logoUrl from "@assets/generated_images/VeriScan_AI_logo_transparent_0cc53648.png";
 
 interface SplashScreenProps {
   onComplete: () => void;

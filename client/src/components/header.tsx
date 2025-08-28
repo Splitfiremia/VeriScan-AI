@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Menu } from "lucide-react";
 import { useState } from "react";
-import logoUrl from "@/assets/logo.png";
+import logoUrl from "@assets/generated_images/VeriScan_AI_logo_transparent_0cc53648.png";
 
 export default function Header() {
   const { user } = useAuth();

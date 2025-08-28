@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Clock, KeyRound, Search, CheckCircle, Zap } from "lucide-react";
-import logoUrl from "@/assets/logo.png";
+import logoUrl from "@assets/generated_images/VeriScan_AI_logo_transparent_0cc53648.png";
 
 export default function Landing() {
   return (
